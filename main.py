@@ -58,10 +58,10 @@ class YouTube:
 
         response = request.execute()  # Send request and receive response
 
-        print(response)
         # Extract playlist_id from the received response
+        playlist_id = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
 
-        return response
+        return playlist_id
 
 
 if __name__ == '__main__':
