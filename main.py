@@ -1,4 +1,4 @@
-
+import pandas as pd
 from googleapiclient.discovery import build
 import re
 
@@ -178,12 +178,42 @@ class YouTube:
         s = int(re.search('\d+S', duration)[0][:-1]) if re.search('\d+S', duration) else 0
         return h + m + s
 
+    @staticmethod
+    def create_csv(data: list, file_name: str) -> None:
+
+        titles, dates, views, durations = [], [], [], []
+
+        for item in data:
+            title = item['snippet']['title']
+            date = item['snippet']['publishedAt'][:10]
+            view = item['statistics']['viewCount']
+            duration = item['contentDetails']['duration']
+            duration = YouTube.convert_duration_to_seconds(duration)
+
+            titles.append(title)
+            dates.append(date)
+            views.append(view)
+            durations.append(duration)
+
+        data = pd.DataFrame({
+            'Title': titles,
+            'Upload_Date': dates,
+            'Views': views,
+            'Duration': durations
+        })
+
+        data.to_csv(f'{file_name}.csv',
+                    index=False)
+
 
 if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
+    channel_id = 'UC8wZnXYK_CGKlBcZp-GxYPA'
     yt = YouTube(API_KEY)
     service = yt.construct_service()
-    playlist_id = yt.upload_response(service, 'UCSJBJ3sP5GRUJMON12v28ew')
+    playlist_id = yt.upload_response(service, channel_id)
 
     videos = yt.get_playlist_items(service, playlist_id)
+
+    yt.create_csv(videos, 'NeuralNine.csv')
 
