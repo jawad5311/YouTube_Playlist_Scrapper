@@ -10,6 +10,23 @@ dotenv.load_dotenv()
 
 # Creating YouTube class to communicate with YouTube API
 class YouTube:
+    """
+    Communicate with YouTube API
+
+    ...
+
+    Attributes:
+        key: str
+            Api key used to create service and authenticate user
+
+    Methods:
+        construct_service():
+            Construct service using API_KEY
+        upload_response():
+            Retrieve all uploaded videos playlist's ID
+        get_playlist_items():
+            Retrieve all videos information from playlist
+    """
     def __init__(self, key, scopes: list = None):
         # self.secret_file = secret_file
         self.key = key
@@ -66,43 +83,53 @@ class YouTube:
     @staticmethod
     def get_playlist_items(service, playlist_Id: str):
         """
-        Retrieve channel's all videos information.
+        Retrieve all videos information from playlist.
 
         Parameters:
             service: Instance of Create_Service()
                 service object created using construct_service()
+            playlist_Id: str
+                Id of the playlist from which to retrieve data
+
+        Returns:
+            List: contains information of all videos
         """
+
+        # Create request to retrieve playlist items
         request = service.playlistItems().list(
             part='contentDetails',
             playlistId=playlist_Id,
-            maxResults=10
+            maxResults=50  # Max results per request (maximum: 50)
         )
 
-        response = request.execute()
+        response = request.execute()  # Send request and receive response
 
-        playlist_items = response['items']
-        nextPageToken = response['nextPageToken']
+        playlist_items = response['items']  # Grabs only videos info from the response
+        nextPageToken = response['nextPageToken']  # Grabs next page token
 
         current_page = 1
 
+        # Retrieve data while the next page is available
         while nextPageToken:
             request = service.playlistItems().list(
                 part='contentDetails',
                 playlistId=playlist_Id,
-                maxResults=10,
+                maxResults=50,  # max results per request (maximum: 50)
                 pageToken=nextPageToken
             )
 
-            response = request.execute()
+            response = request.execute()  # Send request
 
-            print(f'Current Page: {current_page}')
+            print(f'Current Page: {current_page}')  # prints current page
             current_page += 1
 
+            # Add items to playlist_items that are retrieved from next page
             playlist_items.extend(response['items'])
             nextPageToken = response.get('nextPageToken')
 
-        videos_id = []
+        videos_id = []  # Holds all available videos id's
 
+        # Go through playlist items list and retrieve all videos id's
         for video_id in playlist_items:
             try:
                 id = video_id['snippet']['resourceId']['videoId']
@@ -112,25 +139,40 @@ class YouTube:
                 id = video_id['contentDetails']['videoId']
                 videos_id.append(id)
 
-        videos_info = []
+        videos_info = []  # Holds info about all available videos
 
-        for batch_num in range(0, len(videos_id), 10):
-            videos_batch = videos_id[batch_num: batch_num + 10]
+        # Loop through all videos id's and retrieve info
+        for batch_num in range(0, len(videos_id), 50):
+            # Create batches of videos to request data
+            videos_batch = videos_id[batch_num: batch_num + 50]  # Batch Size: 50
 
+            # Send request to retrieve video's details
             response_videos = service.videos().list(
+                # video details to be retrieved for each video
                 part='contentDetails,snippet,statistics',
                 id=videos_batch,
-                maxResults=10
+                maxResults=50
             ).execute()
-
+            # batch items received from videos response
             batch_items = response_videos['items']
-
+            # Adding batch items to videos_info list
             videos_info.extend(batch_items)
 
         return videos_info
 
     @staticmethod
-    def convert_duration(duration: str) -> int:
+    def convert_duration_to_seconds(duration: str) -> int:
+        """
+        Converts video duration to seconds
+
+        Parameters:
+            duration: str ->.
+                time duration in format '00H00M00S'
+
+        Returns:
+            int: total number of seconds
+        """
+
         h = int(re.search('\d+H', duration)[0][:-1]) * 60**2 if re.search('\d+H', duration) else 0
         m = int(re.search('\d+M', duration)[0][:-1]) * 60 if re.search('\d+M', duration) else 0
         s = int(re.search('\d+S', duration)[0][:-1]) if re.search('\d+S', duration) else 0
