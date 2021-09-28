@@ -10,8 +10,8 @@ dotenv.load_dotenv()
 
 # Creating YouTube class to communicate with YouTube API
 class YouTube:
-    def __init__(self, secret_file, key, scopes: list = None):
-        self.secret_file = secret_file
+    def __init__(self, key, scopes: list = None):
+        #self.secret_file = secret_file
         self.key = key
         self.scopes = scopes
 
@@ -58,7 +58,17 @@ class YouTube:
 
         response = request.execute()  # Send request and receive response
 
+        print(response)
         # Extract playlist_id from the received response
 
-        pass
+        return response
+
+
+if __name__ == '__main__':
+    API_KEY = os.environ.get('API_KEY')
+    yt = YouTube(API_KEY)
+    service = yt.construct_service_2()
+    response = yt.upload_response(service, 'UCSJBJ3sP5GRUJMON12v28ew')
+    print(response)
+
 
