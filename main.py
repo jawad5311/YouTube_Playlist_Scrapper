@@ -4,7 +4,6 @@ from googleapiclient.discovery import build
 import os
 import dotenv
 
-
 dotenv.load_dotenv()
 
 
@@ -76,7 +75,7 @@ class YouTube:
         playlist_items = response['items']
         nextPageToken = response['nextPageToken']
 
-        print(nextPageToken)
+        #print(nextPageToken)
 
         current_page = 1
 
@@ -95,7 +94,9 @@ class YouTube:
 
             playlist_items.extend(response['items'])
             nextPageToken = response.get('nextPageToken')
-            print(nextPageToken)
+            #print(nextPageToken)
+
+        #print(len(playlist_items))
 
         videos_id = []
 
@@ -108,8 +109,26 @@ class YouTube:
                 id = video_id['contentDetails']['videoId']
                 videos_id.append(id)
 
-        return videos_id
+        #print(len(videos_id))
 
+        videos_info = []
+
+        for batch_num in range(0, len(videos_id), 10):
+            videos_batch = videos_id[batch_num: batch_num + 10]
+
+            response_videos = service.videos().list(
+                part='contentDetails,snippet,statistics',
+                id=videos_batch,
+                maxResults=10
+            ).execute()
+
+            batch_items = response_videos['items']
+
+            videos_info.extend(batch_items)
+
+        #print(len(videos_info))
+
+        return videos_info
 
 
 if __name__ == '__main__':
@@ -117,11 +136,9 @@ if __name__ == '__main__':
     yt = YouTube(API_KEY)
     service = yt.construct_service()
     playlist_id = yt.upload_response(service, 'UCSJBJ3sP5GRUJMON12v28ew')
-    print(playlist_id)
+    #print(playlist_id)
 
     videos = yt.get_playlist_items(service, playlist_id)
-    print(len(videos))
+    #print(len(videos))
 
-
-
-
+    #print(len(videos))
