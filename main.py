@@ -1,5 +1,6 @@
-from Google import Create_Service
+
 from googleapiclient.discovery import build
+import re
 
 import os
 import dotenv
@@ -64,6 +65,13 @@ class YouTube:
 
     @staticmethod
     def get_playlist_items(service, playlist_Id: str):
+        """
+        Retrieve channel's all videos information.
+
+        Parameters:
+            service: Instance of Create_Service()
+                service object created using construct_service()
+        """
         request = service.playlistItems().list(
             part='contentDetails',
             playlistId=playlist_Id,
@@ -74,8 +82,6 @@ class YouTube:
 
         playlist_items = response['items']
         nextPageToken = response['nextPageToken']
-
-        #print(nextPageToken)
 
         current_page = 1
 
@@ -94,9 +100,6 @@ class YouTube:
 
             playlist_items.extend(response['items'])
             nextPageToken = response.get('nextPageToken')
-            #print(nextPageToken)
-
-        #print(len(playlist_items))
 
         videos_id = []
 
@@ -108,8 +111,6 @@ class YouTube:
             except KeyError:
                 id = video_id['contentDetails']['videoId']
                 videos_id.append(id)
-
-        #print(len(videos_id))
 
         videos_info = []
 
@@ -126,9 +127,14 @@ class YouTube:
 
             videos_info.extend(batch_items)
 
-        #print(len(videos_info))
-
         return videos_info
+
+    @staticmethod
+    def convert_duration(duration: str) -> int:
+        h = int(re.search('\d+H', duration)[0][:-1]) * 60**2 if re.search('\d+H', duration) else 0
+        m = int(re.search('\d+M', duration)[0][:-1]) * 60 if re.search('\d+M', duration) else 0
+        s = int(re.search('\d+S', duration)[0][:-1]) if re.search('\d+S', duration) else 0
+        return h + m + s
 
 
 if __name__ == '__main__':
@@ -136,9 +142,6 @@ if __name__ == '__main__':
     yt = YouTube(API_KEY)
     service = yt.construct_service()
     playlist_id = yt.upload_response(service, 'UCSJBJ3sP5GRUJMON12v28ew')
-    #print(playlist_id)
 
     videos = yt.get_playlist_items(service, playlist_id)
-    #print(len(videos))
 
-    #print(len(videos))
