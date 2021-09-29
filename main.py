@@ -134,9 +134,13 @@ class YouTube:
             print(f'Total Videos found: {len(playlist_items)}')
 
         # If KeyError occurs, prints out the total videos found and pass the error
-        except KeyError:
-            print(f'Total Videos found: {len(playlist_items)}')
-            pass
+        except KeyError as err:
+            # If KeyError is for next page than continue the script
+            if err == 'nextPageToken':
+                print(f'Total Videos found: {len(playlist_items)}')
+                pass
+            else:
+                raise
 
         videos_id = []  # Holds all available videos id's
 
@@ -191,26 +195,53 @@ class YouTube:
 
     @staticmethod
     def create_csv(data: list, file_name: str) -> None:
+        """
+        Creates a csv file of required data.
 
-        titles, dates, views, durations = [], [], [], []
+        Parameters:
+            data: list
+                Data requested using get_playlist_items()
+            file_name: str
+                Filename for the csv file
+                Only provide filename without file format
+
+        Returns:
+            None: Saves a .csv file in the current directory
+        """
+
+        columns = ['titles', 'dates', 'views', 'durations', 'likes', 'dislikes', 'comments']
+
+        # Create empty list for each column
+        for _ in columns:
+            # globals() function converts string to variable name
+            globals()[_] = []
 
         for item in data:
             title = item['snippet']['title']
             date = item['snippet']['publishedAt'][:10]
             view = item['statistics']['viewCount']
             duration = item['contentDetails']['duration']
+            like = item['statistics']['likeCount']
+            dislike = item['statistics']['dislikeCount']
+            comment = item['statistics']['commentCount']
             duration = YouTube.convert_duration_to_seconds(duration)
 
             titles.append(title)
             dates.append(date)
             views.append(view)
             durations.append(duration)
+            likes.append(like)
+            dislikes.append(dislike)
+            comments.append(comment)
 
         data = pd.DataFrame({
             'Title': titles,
             'Upload_Date': dates,
             'Views': views,
-            'Duration': durations
+            'Duration': durations,
+            'Likes': likes,
+            'DisLikes': dislikes,
+            'Comments_Count': comments
         })
 
         data.to_csv(f'{file_name}.csv',
@@ -219,12 +250,12 @@ class YouTube:
 
 if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
-    channel_id = 'UC8wZnXYK_CGKlBcZp-GxYPA'
+    channel_id = 'UCsKsymTY_4BYR-wytLjex7A'
     yt = YouTube(API_KEY)
     service = yt.construct_service()
     playlist_id = yt.upload_response(service, channel_id)
 
     videos = yt.get_playlist_items(service, playlist_id)
 
-    yt.create_csv(videos, 'NeuralNine.csv')
+    yt.create_csv(videos, 'Brian_Design')
 
