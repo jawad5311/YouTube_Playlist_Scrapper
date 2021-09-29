@@ -27,10 +27,10 @@ class YouTube:
         get_playlist_items():
             Retrieve all videos information from playlist
     """
-    def __init__(self, key, scopes: list = None):
+    def __init__(self, key):
         # self.secret_file = secret_file
         self.key = key
-        self.scopes = scopes
+        # self.scopes = scopes
 
     # def construct_service(self):
     #     """
@@ -81,7 +81,7 @@ class YouTube:
         return playlist_id
 
     @staticmethod
-    def get_playlist_items(service, playlist_Id: str):
+    def get_playlist_items(service, playlist_Id: str) -> []:
         """
         Retrieve all videos information from playlist.
 
