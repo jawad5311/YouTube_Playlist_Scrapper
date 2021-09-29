@@ -95,37 +95,48 @@ class YouTube:
             List: contains information of all videos
         """
 
-        # Create request to retrieve playlist items
-        request = service.playlistItems().list(
-            part='contentDetails',
-            playlistId=playlist_Id,
-            maxResults=50  # Max results per request (maximum: 50)
-        )
+        global playlist_items
 
-        response = request.execute()  # Send request and receive response
-
-        playlist_items = response['items']  # Grabs only videos info from the response
-        nextPageToken = response['nextPageToken']  # Grabs next page token
-
-        current_page = 1
-
-        # Retrieve data while the next page is available
-        while nextPageToken:
+        # Adding KeyError exception handling for channel less than 50 videos
+        try:
+            # Create request to retrieve playlist items
             request = service.playlistItems().list(
                 part='contentDetails',
                 playlistId=playlist_Id,
-                maxResults=50,  # max results per request (maximum: 50)
-                pageToken=nextPageToken
+                maxResults=50  # Max results per request (maximum: 50)
             )
 
-            response = request.execute()  # Send request
+            response = request.execute()  # Send request and receive response
 
-            print(f'Current Page: {current_page}')  # prints current page
-            current_page += 1
+            playlist_items = response['items']  # Grabs only videos info from the response
+            nextPageToken = response['nextPageToken']  # Grabs next page token
 
-            # Add items to playlist_items that are retrieved from next page
-            playlist_items.extend(response['items'])
-            nextPageToken = response.get('nextPageToken')
+            current_page = 1
+
+            # Retrieve data while the next page is available
+            while nextPageToken:
+                request = service.playlistItems().list(
+                    part='contentDetails',
+                    playlistId=playlist_Id,
+                    maxResults=50,  # max results per request (maximum: 50)
+                    pageToken=nextPageToken
+                )
+
+                response = request.execute()  # Send request
+
+                print(f'Current Page: {current_page}')  # prints current page
+                current_page += 1
+
+                # Add items to playlist_items that are retrieved from next page
+                playlist_items.extend(response['items'])
+                nextPageToken = response.get('nextPageToken')
+
+            print(f'Total Videos found: {len(playlist_items)}')
+
+        # If KeyError occurs, prints out the total videos found and pass the error
+        except KeyError:
+            print(f'Total Videos found: {len(playlist_items)}')
+            pass
 
         videos_id = []  # Holds all available videos id's
 
