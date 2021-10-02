@@ -176,6 +176,35 @@ class YouTube:
         return videos_info
 
     @staticmethod
+    def get_channel_list(service, query: str):
+
+        search_response = []
+
+        response = service.search().list(
+            part='snippet',
+            q=query,
+            maxResults=50
+        ).execute()
+
+        search_response.extend(response['items'])
+        next_page_token = response['nextPageToken']
+        print(f'Next Page token: {next_page_token}')
+
+        for i in range(2):
+            response = service.search().list(
+                part='snippet',
+                q=query,
+                maxResults=50,
+                pageToken=next_page_token
+            ).execute()
+
+            search_response.extend(response['items'])
+            next_page_token = response['nextPageToken']
+            print(f'Next Page token: {next_page_token}')
+
+        print(f'search response len: {len(search_response)}')
+
+    @staticmethod
     def convert_duration_to_seconds(duration: str) -> int:
         """
         Converts video duration to seconds
@@ -250,12 +279,13 @@ class YouTube:
 
 if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
-    channel_id = 'UCsKsymTY_4BYR-wytLjex7A'
+
     yt = YouTube(API_KEY)
     service = yt.construct_service()
-    playlist_id = yt.upload_response(service, channel_id)
 
-    videos = yt.get_playlist_items(service, playlist_id)
+    # playlist_id = yt.upload_response(service, channel_id)
+    # videos = yt.get_playlist_items(service, playlist_id)
+    # yt.create_csv(videos, 'Brian_Design')
 
-    yt.create_csv(videos, 'Brian_Design')
+    yt.get_channel_list(service, 'how to')
 
