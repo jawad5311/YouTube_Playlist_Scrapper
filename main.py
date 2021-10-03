@@ -204,6 +204,18 @@ class YouTube:
 
         print(f'search response len: {len(search_response)}')
 
+        channels_ids = []
+
+        for item in search_response:
+            channel_id = item['snippet']['channelId']
+            if channel_id not in channels_ids:
+                channels_ids.append(channel_id)
+
+        print(f'Unique channels id\'s: {len(channels_ids)}')
+
+        # channels_ids = ','.join(channels_ids)
+        # print(f'all channel ids in single string: {channels_ids}')
+
     @staticmethod
     def convert_duration_to_seconds(duration: str) -> int:
         """
