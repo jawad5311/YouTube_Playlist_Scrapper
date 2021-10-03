@@ -213,6 +213,11 @@ class YouTube:
 
         print(f'Unique channels id\'s: {len(channels_ids)}')
 
+        batch_size = 50
+
+        for batch_num in range(0, len(channels_ids), batch_size):
+            batch = channels_ids[batch_num: batch_num + batch_size]
+
         # channels_ids = ','.join(channels_ids)
         # print(f'all channel ids in single string: {channels_ids}')
 
