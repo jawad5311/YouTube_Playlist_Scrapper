@@ -176,7 +176,7 @@ class YouTube:
         return videos_info
 
     @staticmethod
-    def get_channel_list(service, query: str):
+    def get_channel_ids(service, query: str) -> list:
 
         search_response = []
 
@@ -213,11 +213,16 @@ class YouTube:
 
         print(f'Unique channels id\'s: {len(channels_ids)}')
 
+        return channels_ids
+
+    @staticmethod
+    def filter_channels(channels_ids: list) -> list:
         filtered_channels = []
         batch_size = 50
 
         for batch_num in range(0, len(channels_ids), batch_size):
             batch = channels_ids[batch_num: batch_num + batch_size]
+            batch = ','.join(batch)
 
             channel_response = service.channels().list(
                 part='snippet,statistics,contentDetails',
@@ -237,8 +242,9 @@ class YouTube:
                         item['statistics']['subscriberCount'] = '0'
                         filtered_channels.append(item)
 
+        return filtered_channels
 
-        # channels_ids = ','.join(channels_ids)
+
         # print(f'all channel ids in single string: {channels_ids}')
 
     @staticmethod
