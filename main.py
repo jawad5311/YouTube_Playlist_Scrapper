@@ -218,7 +218,7 @@ class YouTube:
         return channels_ids
 
     @staticmethod
-    def filter_channels(channels_ids: list) -> list:
+    def filter_channels(service, channels_ids: list) -> list:
         filtered_channels = []
         batch_size = 50
 
@@ -244,6 +244,7 @@ class YouTube:
                         item['statistics']['subscriberCount'] = '0'
                         filtered_channels.append(item)
 
+        print(f'Filtered Channels: {len(filtered_channels)}')
         return filtered_channels
 
     @staticmethod
@@ -269,10 +270,32 @@ class YouTube:
             if vid_new_time >= current_time:
                 active_channels.append(item)
 
+        print(f'Active Channels: {len(active_channels)}')
         return active_channels
 
 
         # print(f'all channel ids in single string: {channels_ids}')
+
+    @staticmethod
+    def channel_data(data: list):
+        for item in data:
+            channel_id = item['id']
+            channel_url = f'youtube.com/channel/{channel_id}'
+
+            channel_title = item['snippet']['title']
+
+            channel_date = item['snippet']['publishedAt'][:10]
+            # channel_date = datetime.strptime(channel_date, '%Y-%m-%d')
+
+            country = item['snippet']['country']
+
+            custom_url = item['snippet']['customUrl']
+            custom_url = f'youtube.com/c/{custom_url}'
+
+            subs = item['statistics']['subscriberCount']
+            vid_count = item['statistics']['videoCount']
+            view_count = item['statistics']['viewCount']
+
 
     @staticmethod
     def convert_duration_to_seconds(duration: str) -> int:
@@ -357,5 +380,9 @@ if __name__ == '__main__':
     # videos = yt.get_playlist_items(service, playlist_id)
     # yt.create_csv(videos, 'Brian_Design')
 
-    yt.get_channel_list(service, 'how to')
+    channel_ids = yt.get_channel_ids(service, 'how to make')
+    filtered_channels = yt.filter_channels(service, channel_ids)
+    active_channels = yt.filter_active_channels(service, filtered_channels)
+    print(len(active_channels))
+    print(active_channels)
 
