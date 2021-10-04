@@ -13,19 +13,19 @@ To run this project, you will need to add the following environment variables to
   
 ## Code Reference
 
-### `YouTube()`
+### YouTube()
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `API_KEY` | `string` | **Required**. Your API key |
 
-### `construct_service()`
+### construct_service()
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
 | `None`      |  | No parameter required |
 
-### `upload_response()`
+### upload_response()
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
@@ -36,7 +36,7 @@ To run this project, you will need to add the following environment variables to
 | :-------- | :------- | :-------------------------------- |
 | playlist ID | str | Playlist ID of all videos |
 
-### `get_playlist_items()`
+### get_playlist_items()
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
@@ -47,7 +47,7 @@ To run this project, you will need to add the following environment variables to
 | :-------- | :------- | :-------------------------------- |
 | Videos Info | list | List of all videos information |
 
-### `convert_duration_to_seconds()`
+### convert_duration_to_seconds()
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
@@ -58,7 +58,7 @@ To run this project, you will need to add the following environment variables to
 | seconds | int | Video duration in seconds |
 
 
-### `create_csv()`
+### create_csv()
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
