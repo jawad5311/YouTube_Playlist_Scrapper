@@ -273,15 +273,10 @@ class YouTube:
         print(f'Active Channels: {len(active_channels)}')
         return active_channels
 
-
-        # print(f'all channel ids in single string: {channels_ids}')
-
     @staticmethod
-    def channel_data(data: list):
+    def channel_data(data: list) -> pd.DataFrame:
+        channel_info = []
         for item in data:
-            channel_id = item['id']
-            channel_url = f'youtube.com/channel/{channel_id}'
-
             channel_title = item['snippet']['title']
 
             channel_date = item['snippet']['publishedAt'][:10]
@@ -289,12 +284,32 @@ class YouTube:
 
             country = item['snippet']['country']
 
+            channel_id = item['id']
+            channel_url = f'youtube.com/channel/{channel_id}'
             custom_url = item['snippet']['customUrl']
             custom_url = f'youtube.com/c/{custom_url}'
 
             subs = item['statistics']['subscriberCount']
             vid_count = item['statistics']['videoCount']
             view_count = item['statistics']['viewCount']
+
+            channel_info.append({
+                'URL': channel_url,
+                'Title': channel_title,
+                'Subs': subs,
+                'Country': country,
+                'Channel_created': channel_date,
+                'Videos': vid_count,
+                'Views': view_count,
+                'custom_URL': custom_url
+            })
+
+        return pd.DataFrame(channel_info)
+
+    @staticmethod
+    def create_csv(data: pd.DataFrame, filename: str) -> None:
+        data.to_csv(f'{filename}.csv',
+                    index=False)
 
 
     @staticmethod
