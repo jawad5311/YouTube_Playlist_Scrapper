@@ -1,6 +1,8 @@
 import pandas as pd
-from googleapiclient.discovery import build
 import re
+
+from googleapiclient.discovery import build
+from datetime import datetime, timedelta
 
 import os
 import dotenv
@@ -243,6 +245,31 @@ class YouTube:
                         filtered_channels.append(item)
 
         return filtered_channels
+
+    @staticmethod
+    def filter_active_channels(service, channels: list, activity: int = 21) -> list:
+
+        active_channels = []
+
+        for item in channels:
+            uploads = item['contentDetails']['relatedPlaylists']['uploads']
+            response = service.playlistItems().list(
+                part='contentDetails',
+                playlistId=uploads,
+                maxResults=1
+            ).execute()
+
+            vid_time = response['items'][0]['contentDetails']['videoPublishedAt'][:10]
+            vid_time = datetime.strptime(vid_time, '%Y-%m-%d')
+            vid_new_time = vid_time + timedelta(days=activity)
+
+            current_time = datetime.now().strftime('%Y-%m-%d')
+            current_time = datetime.strptime(current_time, '%Y-%m-%d')
+
+            if vid_new_time >= current_time:
+                active_channels.append(item)
+
+        return active_channels
 
 
         # print(f'all channel ids in single string: {channels_ids}')
