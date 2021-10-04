@@ -192,7 +192,10 @@ class YouTube:
         next_page_token = response['nextPageToken']
         print(f'Next Page token: {next_page_token}')
 
-        for i in range(2):
+        current_page = 1
+        print(f'Current Page: {current_page}')
+
+        for i in range(5):
             response = service.search().list(
                 part='snippet',
                 q=query,
@@ -202,7 +205,9 @@ class YouTube:
 
             search_response.extend(response['items'])
             next_page_token = response['nextPageToken']
-            print(f'Next Page token: {next_page_token}')
+            # print(f'Next Page token: {next_page_token}')
+            current_page += 1
+            print(f'Current Page: {current_page}')
 
         print(f'search response len: {len(search_response)}')
 
@@ -234,11 +239,13 @@ class YouTube:
 
             for item in channel_response['items']:
                 subs_hidden = item['statistics']['hiddenSubscriberCount']
+                if subs_hidden:
+                    item['statistics']['subscriberCount'] = '0'
                 vid_count = item['statistics']['videoCount']
-                if int(vid_count) > 20:
+                if int(vid_count) > 2:
                     if not subs_hidden:
                         subs = item['statistics']['subscriberCount']
-                        if 1000 < int(subs) < 100000:
+                        if 1000 < int(subs) < 10000000:
                             filtered_channels.append(item)
                     else:
                         item['statistics']['subscriberCount'] = '0'
@@ -274,7 +281,7 @@ class YouTube:
         return active_channels
 
     @staticmethod
-    def channel_data(data: list) -> pd.DataFrame:
+    def extract_channel_data(data: list) -> pd.DataFrame:
         channel_info = []
         for item in data:
             channel_title = item['snippet']['title']
@@ -282,35 +289,44 @@ class YouTube:
             channel_date = item['snippet']['publishedAt'][:10]
             # channel_date = datetime.strptime(channel_date, '%Y-%m-%d')
 
-            country = item['snippet']['country']
+            try:
+                country = item['snippet']['country']
+            except KeyError:
+                country = 'NaN'
 
             channel_id = item['id']
             channel_url = f'youtube.com/channel/{channel_id}'
-            custom_url = item['snippet']['customUrl']
-            custom_url = f'youtube.com/c/{custom_url}'
+            try:
+                custom_url = item['snippet']['customUrl']
+                custom_url = f'youtube.com/c/{custom_url}'
+            except KeyError:
+                custom_url = 'NaN'
 
             subs = item['statistics']['subscriberCount']
             vid_count = item['statistics']['videoCount']
             view_count = item['statistics']['viewCount']
 
             channel_info.append({
-                'URL': channel_url,
+                'channel_URL': channel_url,
                 'Title': channel_title,
                 'Subs': subs,
                 'Country': country,
-                'Channel_created': channel_date,
-                'Videos': vid_count,
-                'Views': view_count,
+                'Channel_created_on': channel_date,
+                'Total_Videos': vid_count,
+                'Total_Views': view_count,
                 'custom_URL': custom_url
             })
+
+        print(f'Pandas DataFrame created successfully!')
 
         return pd.DataFrame(channel_info)
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
+        print(f'Creating .csv file with name: {filename}')
         data.to_csv(f'{filename}.csv',
                     index=False)
-
+        print(f'csv file created at location: {os.getcwd()}\\{filename}.csv')
 
     @staticmethod
     def convert_duration_to_seconds(duration: str) -> int:
@@ -331,7 +347,7 @@ class YouTube:
         return h + m + s
 
     @staticmethod
-    def create_csv(data: list, file_name: str) -> None:
+    def video_data(data: list) -> pd.DataFrame:
         """
         Creates a csv file of required data.
 
@@ -381,8 +397,7 @@ class YouTube:
             'Comments_Count': comments
         })
 
-        data.to_csv(f'{file_name}.csv',
-                    index=False)
+        return data
 
 
 if __name__ == '__main__':
@@ -395,9 +410,8 @@ if __name__ == '__main__':
     # videos = yt.get_playlist_items(service, playlist_id)
     # yt.create_csv(videos, 'Brian_Design')
 
-    channel_ids = yt.get_channel_ids(service, 'how to make')
+    channel_ids = yt.get_channel_ids(service, 'how to finance')
     filtered_channels = yt.filter_channels(service, channel_ids)
-    active_channels = yt.filter_active_channels(service, filtered_channels)
-    print(len(active_channels))
-    print(active_channels)
-
+    # active_channels = yt.filter_active_channels(service, filtered_channels)
+    data = yt.extract_channel_data(filtered_channels)
+    yt.create_csv(data, 'finance_channels')
