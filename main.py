@@ -30,8 +30,10 @@ class YouTube:
             Retrieve all videos information from playlist
     """
     def __init__(self, key):
-        # self.secret_file = secret_file
         self.key = key
+        self.service = self.construct_service()
+
+        # self.secret_file = secret_file
         # self.scopes = scopes
 
     # def construct_service(self):
@@ -57,20 +59,17 @@ class YouTube:
         )
         return service
 
-    @staticmethod
-    def upload_response(service, channel_id: str) -> str:
+    def upload_response(self, channel_id: str) -> str:
         """
         Send request to retrieve uploaded videos response as playlist ID.
 
             Parameters:
-                service: Instance of Create_Service()
-                    service object created using construct_service()
                 channel_id: str
                     Channel's id required for request
             Returns:
                 str: playlist_id
         """
-        request = service.channels().list(
+        request = self.service.channels().list(
             part='contentDetails',
             id=channel_id
         )
@@ -82,14 +81,11 @@ class YouTube:
 
         return playlist_id
 
-    @staticmethod
-    def get_playlist_items(service, playlist_Id: str) -> []:
+    def get_playlist_items(self, playlist_Id: str) -> []:
         """
         Retrieve all videos information from playlist.
 
         Parameters:
-            service: Instance of Create_Service()
-                service object created using construct_service()
             playlist_Id: str
                 Id of the playlist from which to retrieve data
 
@@ -97,12 +93,12 @@ class YouTube:
             List: contains information of all videos
         """
 
-        global playlist_items
+        playlist_items = []
 
         # Adding KeyError exception handling for channel less than 50 videos
         try:
             # Create request to retrieve playlist items
-            request = service.playlistItems().list(
+            request = self.service.playlistItems().list(
                 part='contentDetails',
                 playlistId=playlist_Id,
                 maxResults=50  # Max results per request (maximum: 50)
@@ -110,14 +106,15 @@ class YouTube:
 
             response = request.execute()  # Send request and receive response
 
-            playlist_items = response['items']  # Grabs only videos info from the response
+            items = response['items']  # Grabs only videos info from the response
+            playlist_items.extend(items)
             nextPageToken = response['nextPageToken']  # Grabs next page token
 
             current_page = 1
 
             # Retrieve data while the next page is available
             while nextPageToken:
-                request = service.playlistItems().list(
+                request = self.service.playlistItems().list(
                     part='contentDetails',
                     playlistId=playlist_Id,
                     maxResults=50,  # max results per request (maximum: 50)
@@ -164,7 +161,7 @@ class YouTube:
             videos_batch = videos_id[batch_num: batch_num + 50]  # Batch Size: 50
 
             # Send request to retrieve video's details
-            response_videos = service.videos().list(
+            response_videos = self.service.videos().list(
                 # video details to be retrieved for each video
                 part='contentDetails,snippet,statistics',
                 id=videos_batch,
@@ -177,26 +174,38 @@ class YouTube:
 
         return videos_info
 
-    @staticmethod
-    def get_channel_ids(service, query: str) -> list:
+    def get_channel_ids(self, query: str) -> list:
+        """
+            Extract channels id's based on search query.
 
-        search_response = []
+            Parameters:
+                query: str
+                    Search query for which the request is to be made
 
-        response = service.search().list(
+            Returns: list
+                List of channels id's
+
+        """
+        search_response = []  # Holds search response
+
+        # Request search
+        response = self.service.search().list(
             part='snippet',
             q=query,
             maxResults=50
         ).execute()
 
-        search_response.extend(response['items'])
-        next_page_token = response['nextPageToken']
+        search_response.extend(response['items'])  # Add returned items to list
+        next_page_token = response['nextPageToken']  # Grabs nextpage token
         print(f'Next Page token: {next_page_token}')
 
+        # Display current page that is being scrapped on terminal
         current_page = 1
         print(f'Current Page: {current_page}')
 
+        # Request search for 5 times
         for i in range(5):
-            response = service.search().list(
+            response = self.service.search().list(
                 part='snippet',
                 q=query,
                 maxResults=50,
@@ -207,73 +216,129 @@ class YouTube:
             next_page_token = response['nextPageToken']
             # print(f'Next Page token: {next_page_token}')
             current_page += 1
-            print(f'Current Page: {current_page}')
+            if current_page % 2 == 0:
+                print(f'Current Page: {current_page}')
 
         print(f'search response len: {len(search_response)}')
 
-        channels_ids = []
+        channels_ids = []  # Holds channels id's
 
+        # Loop through each item in search response and grabs channel id
         for item in search_response:
-            channel_id = item['snippet']['channelId']
+            channel_id = item['snippet']['channelId']  # Channel id
+            # Add channel to the list if it is not already added
             if channel_id not in channels_ids:
                 channels_ids.append(channel_id)
 
         print(f'Unique channels id\'s: {len(channels_ids)}')
 
-        return channels_ids
+        return channels_ids  # Returns list contains channels id's
 
-    @staticmethod
-    def filter_channels(service, channels_ids: list) -> list:
-        filtered_channels = []
-        batch_size = 50
+    def filter_channels(self,
+                        channels_ids: list,
+                        subs_min: int = 1000,
+                        subs_max: int = 100000,
+                        min_vid_count: int = 5) -> list:
+        """
+            Filter channels based on no. of videos and subs count.
 
+            Parameters:
+                channels_ids: list
+                    List containing channel id's
+                subs_min: int
+                    Minimum number of subscribers a channel must have
+                subs_max: int
+                    Maximum number of subscribers a channel must have
+                min_vid_count: int
+                    Minimum number of videos a channel must have
+
+            Returns: list
+                List containing filtered channels
+        """
+        filtered_channels = []  # Holds filtered channels
+        batch_size = 50  # No. channels to request data in single request
+
+        """
+        Loop through channels_ids list.
+        Create batches of ids to request data.
+        Then filter channels based on videos and subs.
+        Add filtered channels to the filtered_channels list"""
         for batch_num in range(0, len(channels_ids), batch_size):
+            # Create batches
             batch = channels_ids[batch_num: batch_num + batch_size]
-            batch = ','.join(batch)
+            batch = ','.join(batch)  # Join id's with comma
 
-            channel_response = service.channels().list(
+            # Request channel data using channel id
+            channel_response = self.service.channels().list(
                 part='snippet,statistics,contentDetails',
                 id=batch,
                 maxResults=batch_size,
             ).execute()
 
+            # Filter channels and append them to list
             for item in channel_response['items']:
                 subs_hidden = item['statistics']['hiddenSubscriberCount']
+                # If subs are hidden then add subscribers count = 0
                 if subs_hidden:
                     item['statistics']['subscriberCount'] = '0'
                 vid_count = item['statistics']['videoCount']
-                if int(vid_count) > 2:
+                if int(vid_count) > min_vid_count:
                     if not subs_hidden:
                         subs = item['statistics']['subscriberCount']
-                        if 1000 < int(subs) < 10000000:
+                        if subs_min < int(subs) < subs_max:
                             filtered_channels.append(item)
                     else:
                         item['statistics']['subscriberCount'] = '0'
                         filtered_channels.append(item)
 
         print(f'Filtered Channels: {len(filtered_channels)}')
-        return filtered_channels
+        return filtered_channels  # Returns list of filtered channels
 
-    @staticmethod
-    def filter_active_channels(service, channels: list, activity: int = 21) -> list:
+    def filter_active_channels(self, data: list, activity: int = 21) -> list:
+        """
+            Filter channels based on their recent activity
 
-        active_channels = []
+            Parameters:
+                data: list
+                    List of channels retrieved from filter_channels()
+                activity: int
+                    Last activity of channel in no. of days
 
-        for item in channels:
+            Returns:
+                list -> List containing active channels
+        """
+        active_channels = []  # Holds active channels
+        current_item = 1
+
+        # Go through each item in data and retrieve playlist id
+        # Send request and retrieve playlist information
+        # Fetch last uploaded video and retrieve its published date
+        # See if the video is uploaded within activity days
+        for item in data:
             uploads = item['contentDetails']['relatedPlaylists']['uploads']
-            response = service.playlistItems().list(
+            response = self.service.playlistItems().list(
                 part='contentDetails',
                 playlistId=uploads,
                 maxResults=1
             ).execute()
 
+            # Grabs recent published video time
             vid_time = response['items'][0]['contentDetails']['videoPublishedAt'][:10]
             vid_time = datetime.strptime(vid_time, '%Y-%m-%d')
+            # Increment recent video time by no. of days activity
             vid_new_time = vid_time + timedelta(days=activity)
 
+            # Current local time
             current_time = datetime.now().strftime('%Y-%m-%d')
             current_time = datetime.strptime(current_time, '%Y-%m-%d')
 
+            # Displays no. of channels that are being filtered
+            current_item += 1
+            if current_item % 50 == 0:
+                print(f'No. of active channels filtered: {current_item}')
+
+            # If recent uploaded video is within the given timeframe
+            # then append this video to the list
             if vid_new_time >= current_time:
                 active_channels.append(item)
 
@@ -282,30 +347,39 @@ class YouTube:
 
     @staticmethod
     def extract_channel_data(data: list) -> pd.DataFrame:
+        """
+        Extract channel information from the data
+
+        Parameters:
+            data: list
+                Data containing channels raw information
+
+        Returns:
+            Pandas DataFrame
+        """
         channel_info = []
         for item in data:
-            channel_title = item['snippet']['title']
-
-            channel_date = item['snippet']['publishedAt'][:10]
+            channel_title = item['snippet']['title']  # Channel Title
+            channel_date = item['snippet']['publishedAt'][:10]  # Channel created date
             # channel_date = datetime.strptime(channel_date, '%Y-%m-%d')
-
             try:
-                country = item['snippet']['country']
+                country = item['snippet']['country']  # Creator country
             except KeyError:
                 country = 'NaN'
-
-            channel_id = item['id']
-            channel_url = f'youtube.com/channel/{channel_id}'
+            channel_id = item['id']  # Channel ID
+            channel_url = f'youtube.com/channel/{channel_id}'  # Channel URL
             try:
+                # Custom URL of channel if available
                 custom_url = item['snippet']['customUrl']
                 custom_url = f'youtube.com/c/{custom_url}'
             except KeyError:
                 custom_url = 'NaN'
 
-            subs = item['statistics']['subscriberCount']
-            vid_count = item['statistics']['videoCount']
-            view_count = item['statistics']['viewCount']
+            subs = item['statistics']['subscriberCount']  # No. of subscribers]
+            vid_count = item['statistics']['videoCount']  # Total no. videos
+            view_count = item['statistics']['viewCount']  # Total no. views
 
+            # Append each info as a dict item into the list
             channel_info.append({
                 'channel_URL': channel_url,
                 'Title': channel_title,
@@ -323,6 +397,18 @@ class YouTube:
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
+        """
+            Create a csv file in the current working directory.
+
+            Parameters:
+                data: Pandas Dataframe
+                filename: str
+                    Name by which to file is to be saved.
+                    Note: provide file name without .csv
+
+            Returns:
+                None -> Create a csv file at the current working directory
+        """
         print(f'Creating .csv file with name: {filename}')
         data.to_csv(f'{filename}.csv',
                     index=False)
@@ -404,14 +490,14 @@ if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
 
     yt = YouTube(API_KEY)
-    service = yt.construct_service()
+    # service = yt.construct_service()
 
     # playlist_id = yt.upload_response(service, channel_id)
     # videos = yt.get_playlist_items(service, playlist_id)
     # yt.create_csv(videos, 'Brian_Design')
 
-    channel_ids = yt.get_channel_ids(service, 'how to finance')
-    filtered_channels = yt.filter_channels(service, channel_ids)
+    channel_ids = yt.get_channel_ids('how to finance')
+    # filtered_channels = yt.filter_channels(service, channel_ids)
     # active_channels = yt.filter_active_channels(service, filtered_channels)
-    data = yt.extract_channel_data(filtered_channels)
-    yt.create_csv(data, 'finance_channels')
+    # data = yt.extract_channel_data(filtered_channels)
+    # yt.create_csv(data, 'finance_channels')
