@@ -22,12 +22,24 @@ class YouTube:
             Api key used to create service and authenticate user
 
     Methods:
-        construct_service():
-            Construct service using API_KEY
         upload_response():
             Retrieve all uploaded videos playlist's ID
         get_playlist_items():
             Retrieve all videos information from playlist
+        get_videos_data():
+            Extract each video data form the list of videos data
+        get_channel_ids():
+            Extract channel ids based on search query
+        filter_channel():
+            Filter channels based on video count and subscriptions
+        filter_active_channels():
+            Filter active channels based on their recent activity
+        extract_channel_data():
+            Extract channel data from the filtered channel list
+        create_csv():
+            Creates a csv file in current working directory
+        convert_duration_to_seconds():
+            convert youtube duration format into seconds
     """
     def __init__(self, key):
         self.key = key
@@ -174,13 +186,67 @@ class YouTube:
 
         return videos_info
 
-    def get_channel_ids(self, query: str) -> list:
+    @staticmethod
+    def get_videos_data(data: list) -> pd.DataFrame:
+        """
+        Creates a pandas dataframe from the data
+
+        Parameters:
+            data: list
+                Data requested using get_playlist_items()
+
+        Returns:
+            Pandas DataFrame
+        """
+
+        columns = ['titles', 'dates', 'views', 'durations', 'likes', 'dislikes', 'comments']
+
+        # Create empty list for each column
+        for _ in columns:
+            # globals() function converts string to variable name
+            globals()[_] = []
+
+        for item in data:
+            title = item['snippet']['title']
+            date = item['snippet']['publishedAt'][:10]
+            view = item['statistics']['viewCount']
+            duration = item['contentDetails']['duration']
+            like = item['statistics']['likeCount']
+            dislike = item['statistics']['dislikeCount']
+            comment = item['statistics']['commentCount']
+            duration = YouTube.convert_duration_to_seconds(duration)
+
+            titles.append(title)
+            dates.append(date)
+            views.append(view)
+            durations.append(duration)
+            likes.append(like)
+            dislikes.append(dislike)
+            comments.append(comment)
+
+        data = pd.DataFrame({
+            'Title': titles,
+            'Upload_Date': dates,
+            'Views': views,
+            'Duration': durations,
+            'Likes': likes,
+            'DisLikes': dislikes,
+            'Comments_Count': comments
+        })
+
+        return data
+
+    def get_channel_ids(self, query: str, no_of_channels: int = 300) -> list:
         """
             Extract channels id's based on search query.
 
             Parameters:
                 query: str
                     Search query for which the request is to be made
+                no_of_channels: int (default : 300)
+                    No of channels to scrapped. No. of channel id's you
+                    will get back might be less as same channel id's are
+                    filtered out.
 
             Returns: list
                 List of channels id's
@@ -197,14 +263,15 @@ class YouTube:
 
         search_response.extend(response['items'])  # Add returned items to list
         next_page_token = response['nextPageToken']  # Grabs nextpage token
-        print(f'Next Page token: {next_page_token}')
+        # print(f'Next Page token: {next_page_token}')
 
         # Display current page that is being scrapped on terminal
         current_page = 1
         print(f'Current Page: {current_page}')
+        channel_range = no_of_channels // 50
 
         # Request search for 5 times
-        for i in range(5):
+        for i in range(channel_range):
             response = self.service.search().list(
                 part='snippet',
                 q=query,
@@ -219,7 +286,7 @@ class YouTube:
             if current_page % 2 == 0:
                 print(f'Current Page: {current_page}')
 
-        print(f'search response len: {len(search_response)}')
+        print(f'Total channels in search: {len(search_response)}')
 
         channels_ids = []  # Holds channels id's
 
@@ -431,59 +498,6 @@ class YouTube:
         m = int(re.search('\d+M', duration)[0][:-1]) * 60 if re.search('\d+M', duration) else 0
         s = int(re.search('\d+S', duration)[0][:-1]) if re.search('\d+S', duration) else 0
         return h + m + s
-
-    @staticmethod
-    def video_data(data: list) -> pd.DataFrame:
-        """
-        Creates a csv file of required data.
-
-        Parameters:
-            data: list
-                Data requested using get_playlist_items()
-            file_name: str
-                Filename for the csv file
-                Only provide filename without file format
-
-        Returns:
-            None: Saves a .csv file in the current directory
-        """
-
-        columns = ['titles', 'dates', 'views', 'durations', 'likes', 'dislikes', 'comments']
-
-        # Create empty list for each column
-        for _ in columns:
-            # globals() function converts string to variable name
-            globals()[_] = []
-
-        for item in data:
-            title = item['snippet']['title']
-            date = item['snippet']['publishedAt'][:10]
-            view = item['statistics']['viewCount']
-            duration = item['contentDetails']['duration']
-            like = item['statistics']['likeCount']
-            dislike = item['statistics']['dislikeCount']
-            comment = item['statistics']['commentCount']
-            duration = YouTube.convert_duration_to_seconds(duration)
-
-            titles.append(title)
-            dates.append(date)
-            views.append(view)
-            durations.append(duration)
-            likes.append(like)
-            dislikes.append(dislike)
-            comments.append(comment)
-
-        data = pd.DataFrame({
-            'Title': titles,
-            'Upload_Date': dates,
-            'Views': views,
-            'Duration': durations,
-            'Likes': likes,
-            'DisLikes': dislikes,
-            'Comments_Count': comments
-        })
-
-        return data
 
 
 if __name__ == '__main__':
