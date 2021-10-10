@@ -309,38 +309,14 @@ class YouTube:
         print()
         print(f'Total Channels found: {len(self.ids)}')
 
-    def filter_channels(self,
-                        channels_ids: list,
-                        subs_min: int = 1000,
-                        subs_max: int = 100000,
-                        min_vid_count: int = 5) -> list:
-        """
-            Filter channels based on no. of videos and subs count.
-
-            Parameters:
-                channels_ids: list
-                    List containing channel id's
-                subs_min: int
-                    Minimum number of subscribers a channel must have
-                subs_max: int
-                    Maximum number of subscribers a channel must have
-                min_vid_count: int
-                    Minimum number of videos a channel must have
-
-            Returns: list
-                List containing filtered channels
-        """
-        filtered_channels = []  # Holds filtered channels
+    def request_channels_data(self, data: list = YouTube.ids):
+        channels_data = []  # Holds channels data
         batch_size = 50  # No. channels to request data in single request
 
-        """
-        Loop through channels_ids list.
-        Create batches of ids to request data.
-        Then filter channels based on videos and subs.
-        Add filtered channels to the filtered_channels list"""
-        for batch_num in range(0, len(channels_ids), batch_size):
+        # Creates id batches to request data and store response in list
+        for batch_num in range(0, len(data), batch_size):
             # Create batches
-            batch = channels_ids[batch_num: batch_num + batch_size]
+            batch = data[batch_num: batch_num + batch_size]
             batch = ','.join(batch)  # Join id's with comma
 
             # Request channel data using channel id
@@ -350,21 +326,52 @@ class YouTube:
                 maxResults=batch_size,
             ).execute()
 
-            # Filter channels and append them to list
-            for item in channel_response['items']:
-                subs_hidden = item['statistics']['hiddenSubscriberCount']
-                # If subs are hidden then add subscribers count = 0
-                if subs_hidden:
-                    item['statistics']['subscriberCount'] = '0'
-                vid_count = item['statistics']['videoCount']
-                if int(vid_count) > min_vid_count:
-                    if not subs_hidden:
-                        subs = item['statistics']['subscriberCount']
-                        if subs_min < int(subs) < subs_max:
-                            filtered_channels.append(item)
-                    else:
-                        item['statistics']['subscriberCount'] = '0'
-                        filtered_channels.append(item)
+            channel_items = channel_response['items']
+            channels_data.extend(channel_items)
+
+        print()
+        print(f'Total channels data requested: {len(channels_data)}')
+        return channels_data
+
+    @staticmethod
+    def filter_channels(data: list,
+                        subs_min: int = 1000,
+                        subs_max: int = 100000,
+                        min_vid_count: int = 5) -> list:
+        """
+            Filter channels based on no. of videos and subs count.
+
+            Parameters:
+                data: list,
+                    containing channels data
+                subs_min: int
+                    Minimum number of subscribers a channel must have
+                subs_max: int
+                    Maximum number of subscribers a channel must have
+                min_vid_count: int
+                    Minimum number of videos a channel must have
+
+            Returns:
+                List containing filtered channels
+        """
+        filtered_channels = []
+
+        # Filter channels and append them to list
+        for item in data:
+            subs_hidden = item['statistics']['hiddenSubscriberCount']
+            # If subs are hidden then add subscribers count = 0
+            if subs_hidden:
+                item['statistics']['subscriberCount'] = '0'
+            vid_count = item['statistics']['videoCount']
+            if int(vid_count) > min_vid_count:
+                subs = item['statistics']['subscriberCount']
+                if subs == '0':
+                    filtered_channels.append(item)
+                if subs_min < int(subs) < subs_max:
+                    filtered_channels.append(item)
+                # else:
+                #     # item['statistics']['subscriberCount'] = '0'
+                #     filtered_channels.append(item)
 
         print(f'Filtered Channels: {len(filtered_channels)}')
         return filtered_channels  # Returns list of filtered channels
@@ -442,11 +449,11 @@ class YouTube:
             except KeyError:
                 country = 'NaN'
             channel_id = item['id']  # Channel ID
-            channel_url = f'youtube.com/channel/{channel_id}'  # Channel URL
+            channel_url = f'www.youtube.com/channel/{channel_id}'  # Channel URL
             try:
                 # Custom URL of channel if available
                 custom_url = item['snippet']['customUrl']
-                custom_url = f'youtube.com/c/{custom_url}'
+                custom_url = f'www.youtube.com/c/{custom_url}'
             except KeyError:
                 custom_url = 'NaN'
 
@@ -456,6 +463,7 @@ class YouTube:
 
             # Append each info as a dict item into the list
             channel_info.append({
+                'custom_URL': custom_url,
                 'channel_URL': channel_url,
                 'Title': channel_title,
                 'Subs': subs,
@@ -463,7 +471,6 @@ class YouTube:
                 'Channel_created_on': channel_date,
                 'Total_Videos': vid_count,
                 'Total_Views': view_count,
-                'custom_URL': custom_url
             })
 
         print(f'Pandas DataFrame created successfully!')
