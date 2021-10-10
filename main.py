@@ -45,6 +45,10 @@ class YouTube:
         self.key = key
         self.service = self.construct_service()
 
+        # global ids
+        ids = []
+        self.ids = ids
+
         # self.secret_file = secret_file
         # self.scopes = scopes
 
@@ -236,9 +240,10 @@ class YouTube:
 
         return data
 
-    def get_channel_ids(self, query: str, no_of_channels: int = 300) -> list:
+    def get_channels_id(self, query: str, no_of_channels: int = 300) -> None:
         """
-            Extract channels id's based on search query.
+            Extract channels id's based on search query and add them to
+            `self.ids`
 
             Parameters:
                 query: str
@@ -248,10 +253,14 @@ class YouTube:
                     will get back might be less as same channel id's are
                     filtered out.
 
-            Returns: list
-                List of channels id's
+            Returns: None
+                Add items to `self.ids` list
 
         """
+
+        print(f'Total Channels found: {len(self.ids)}')
+        prev_length = len(self.ids)
+
         search_response = []  # Holds search response
 
         # Request search
@@ -286,20 +295,19 @@ class YouTube:
             if current_page % 2 == 0:
                 print(f'Current Page: {current_page}')
 
-        print(f'Total channels in search: {len(search_response)}')
-
         channels_ids = []  # Holds channels id's
 
         # Loop through each item in search response and grabs channel id
         for item in search_response:
             channel_id = item['snippet']['channelId']  # Channel id
             # Add channel to the list if it is not already added
-            if channel_id not in channels_ids:
-                channels_ids.append(channel_id)
+            if channel_id not in self.ids:
+                self.ids.append(channel_id)
 
-        print(f'Unique channels id\'s: {len(channels_ids)}')
-
-        return channels_ids  # Returns list contains channels id's
+        print()
+        print(f'Unique channels in this run: {len(self.ids) - prev_length}')
+        print()
+        print(f'Total Channels found: {len(self.ids)}')
 
     def filter_channels(self,
                         channels_ids: list,

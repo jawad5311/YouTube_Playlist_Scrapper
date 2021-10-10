@@ -1,6 +1,7 @@
 token.txt
 secret_key.json
 *.csv
+code_testing.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
