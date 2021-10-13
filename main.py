@@ -203,7 +203,7 @@ class YouTube:
             Pandas DataFrame
         """
 
-        columns = ['titles', 'dates', 'views', 'durations', 'likes', 'dislikes', 'comments']
+        columns = ['video_urls', 'titles', 'dates', 'views', 'durations', 'likes', 'dislikes', 'comments']
 
         # Create empty list for each column
         for _ in columns:
@@ -215,11 +215,31 @@ class YouTube:
             date = item['snippet']['publishedAt'][:10]
             view = item['statistics']['viewCount']
             duration = item['contentDetails']['duration']
-            like = item['statistics']['likeCount']
-            dislike = item['statistics']['dislikeCount']
-            comment = item['statistics']['commentCount']
+
+            try:
+                like = item['statistics']['likeCount']
+            except KeyError:
+                item['statistics']['likeCount'] = '0'
+                like = item['statistics']['likeCount']
+
+            try:
+                dislike = item['statistics']['dislikeCount']
+            except KeyError:
+                item['statistics']['dislikeCount'] = '0'
+                dislike = item['statistics']['dislikeCount']
+
+            try:
+                comment = item['statistics']['commentCount']
+            except KeyError:
+                item['statistics']['commentCount'] = '0'
+                comment = item['statistics']['commentCount']
+
+            video_url = item['id']
+            video_url = f'https://www.youtube.com/watch?v={video_url}'
+
             duration = YouTube.convert_duration_to_seconds(duration)
 
+            video_urls.append(video_url)
             titles.append(title)
             dates.append(date)
             views.append(view)
@@ -229,6 +249,7 @@ class YouTube:
             comments.append(comment)
 
         data = pd.DataFrame({
+            'Video_URL': video_urls,
             'Title': titles,
             'Upload_Date': dates,
             'Views': views,
@@ -309,7 +330,7 @@ class YouTube:
         print()
         print(f'Total Channels found: {len(self.ids)}')
 
-    def request_channels_data(self, data: list = YouTube.ids):
+    def request_channels_data(self, data: list = ids):
         channels_data = []  # Holds channels data
         batch_size = 50  # No. channels to request data in single request
 
@@ -468,6 +489,7 @@ class YouTube:
                 'Title': channel_title,
                 'Subs': subs,
                 'Country': country,
+                'Contact': '',
                 'Channel_created_on': channel_date,
                 'Total_Videos': vid_count,
                 'Total_Views': view_count,
