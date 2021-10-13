@@ -3,6 +3,8 @@ import re
 
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 
 import os
 import dotenv
@@ -498,6 +500,88 @@ class YouTube:
         print(f'Pandas DataFrame created successfully!')
 
         return pd.DataFrame(channel_info)
+
+    @staticmethod
+    def scrap_emails(data: pd.DataFrame):
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+
+        driver = webdriver.Chrome('chrome_driver/chromedriver.exe',
+                                  options=chrome_options)
+
+        for i in range(len(channel_data)):
+
+            url = f'https://{data.channel_URL[i]}/about'
+            driver.get(url)
+
+            country = driver.find_element_by_xpath(
+                '//*[@id="details-container"]/table/tbody/tr[2]/td[2]/yt-formatted-string').text
+            if country:
+                data['Country'][i] = country
+
+            description = driver.find_elements_by_id('description')
+            description = description[1].text
+
+            if description:
+                email = extract_emails(description)
+                email = ','.join(email)
+
+                if email:
+                    try:
+                        data['email'][i] = email
+                    except KeyError:
+                        data['email'] = ''
+                        data['email'][i] = email
+
+                else:
+
+                    try:
+                        mail_available = driver.find_element_by_xpath(
+                            '//*[@id="details-container"]/table/tbody/tr[1]/td[2]/yt-formatted-string/a').text
+                        if mail_available:
+                            mail_available = 'available'
+                    except NoSuchElementException:
+                        mail_available = 'NA'
+
+                    try:
+                        data['email_available'][i] = mail_available
+                    except KeyError:
+                        data['email_available'] = ''
+                        data['email_available'][i] = mail_available
+
+            else:
+                try:
+                    mail_available = driver.find_element_by_xpath(
+                        '//*[@id="details-container"]/table/tbody/tr[1]/td[2]/yt-formatted-string/a').text
+                    if mail_available:
+                        mail_available = 'available'
+                except NoSuchElementException:
+                    mail_available = 'NA'
+
+                try:
+                    data['email_available'][i] = mail_available
+                except KeyError:
+                    data['email_available'] = ''
+                    data['email_available'][i] = mail_available
+
+            links_list = driver.find_elements_by_xpath('//*[@id="link-list-container"]/a')
+            for item in links_list:
+                link_title = item.text
+                link = item.get_attribute('href')
+                q_start_index = link.find('&q=') + 3
+                link = link[q_start_index:].replace('%3A', ':').replace('%2F', '/')
+                try:
+                    data[link_title][i] = link
+                except KeyError:
+                    data[link_title] = ''
+                    data[link_title][i] = link
+
+            if not i == 0:
+                if i % 10 == 0:
+                    print(f'No. of channels scrapped: {i}')
+
+        print(f'Total channels email looked for: {i}')
+        return data
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
