@@ -332,12 +332,12 @@ class YouTube:
         print()
         print(f'Total Channels found: {len(self.ids)}')
 
-    def request_channels_data(self, data: list = ids):
+    def request_channels_data(self):
         channels_data = []  # Holds channels data
         batch_size = 50  # No. channels to request data in single request
 
         # Creates id batches to request data and store response in list
-        for batch_num in range(0, len(data), batch_size):
+        for batch_num in range(0, len(self.ids), batch_size):
             # Create batches
             batch = data[batch_num: batch_num + batch_size]
             batch = ','.join(batch)  # Join id's with comma
@@ -503,6 +503,21 @@ class YouTube:
 
     @staticmethod
     def scrap_emails(data: pd.DataFrame):
+
+        def add_data(
+                data: str,
+                data_frame: pd.DataFrame,
+                col_name: str,
+                index: int):
+            try:
+                data_frame[col_name][index] = data
+            except KeyError:
+                data_frame[col_name] = ''
+                data_frame[col_name][index] = data
+
+        def extract_emails(text):
+            return re.findall(r'[\w\.-]+@[\w\.-]+\.\w+', text)
+
         chrome_options = Options()
         chrome_options.add_argument("--headless")
 
@@ -570,17 +585,41 @@ class YouTube:
                 link = item.get_attribute('href')
                 q_start_index = link.find('&q=') + 3
                 link = link[q_start_index:].replace('%3A', ':').replace('%2F', '/')
-                try:
-                    data[link_title][i] = link
-                except KeyError:
-                    data[link_title] = ''
-                    data[link_title][i] = link
+                if re.search('instagram.com', link):
+                    link_title = 'Insta'
+                    add_data(link, data, link_title, i)
+
+                elif re.search('twitter.com', link):
+                    link_title = 'Twitter'
+                    add_data(link, data, link_title, i)
+
+                elif re.search('linkedin.com', link):
+                    link_title = 'Linkedin'
+                    add_data(link, data, link_title, i)
+
+                elif re.search('facebook.com', link):
+                    link_title = 'Facebook'
+                    add_data(link, data, link_title, i)
+
+                elif re.search('discord', link):
+                    link_title = 'Discord'
+                    add_data(link, data, link_title, i)
+
+                elif re.search('tiktok', link):
+                    link_title = 'tiktok'
+                    add_data(link, data, link_title, i)
+
+                elif re.search('youtube.com', link):
+                    pass
+
+                else:
+                    other_links.append(link)
 
             if not i == 0:
                 if i % 10 == 0:
                     print(f'No. of channels scrapped: {i}')
 
-        print(f'Total channels email looked for: {i}')
+        print(f'Total channels scrapped: {i}')
         return data
 
     @staticmethod
@@ -624,14 +663,14 @@ class YouTube:
 if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
 
-    yt = YouTube(API_KEY)
+    # yt = YouTube(API_KEY)
     # service = yt.construct_service()
 
     # playlist_id = yt.upload_response(service, channel_id)
     # videos = yt.get_playlist_items(service, playlist_id)
     # yt.create_csv(videos, 'Brian_Design')
 
-    channel_ids = yt.get_channel_ids('how to finance')
+    # channel_ids = yt.get_channel_ids('how to finance')
     # filtered_channels = yt.filter_channels(service, channel_ids)
     # active_channels = yt.filter_active_channels(service, filtered_channels)
     # data = yt.extract_channel_data(filtered_channels)
