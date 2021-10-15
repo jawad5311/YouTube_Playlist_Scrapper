@@ -48,9 +48,11 @@ class YouTube:
         self.key = key
         self.service = self.construct_service()
 
-        # global ids
-        ids = []
-        self.ids = ids
+        channel_ids = []
+        self.channel_ids = channel_ids
+
+        filtered_channels = []
+        self.filtered_channels = filtered_channels
 
         # self.secret_file = secret_file
         # self.scopes = scopes
@@ -282,8 +284,8 @@ class YouTube:
 
         """
 
-        print(f'Total Channels found: {len(self.ids)}')
-        prev_length = len(self.ids)
+        print(f'Total Channels found: {len(self.channel_ids)}')
+        prev_length = len(self.channel_ids)
 
         search_response = []  # Holds search response
 
@@ -325,27 +327,27 @@ class YouTube:
         for item in search_response:
             channel_id = item['snippet']['channelId']  # Channel id
             # Add channel to the list if it is not already added
-            if channel_id not in self.ids:
-                self.ids.append(channel_id)
+            if channel_id not in self.channel_ids:
+                self.channel_ids.append(channel_id)
 
         print()
-        print(f'Unique channels in this run: {len(self.ids) - prev_length}')
+        print(f'Unique channels in this run: {len(self.channel_ids) - prev_length}')
         print()
-        print(f'Total Channels found: {len(self.ids)}')
+        print(f'Total Channels found: {len(self.channel_ids)}')
 
     def request_channels_data(self) -> list:
         channels_data = []  # Holds channels data
         batch_size = 50  # No. channels to request data in single request
 
         # Creates id batches to request data and store response in list
-        for batch_num in range(0, len(self.ids), batch_size):
+        for batch_num in range(0, len(self.channel_ids), batch_size):
             # Create batches
-            batch = self.ids[batch_num: batch_num + batch_size]
+            batch = self.channel_ids[batch_num: batch_num + batch_size]
             batch = ','.join(batch)  # Join id's with comma
 
             # Request channel data using channel id
             channel_response = self.service.channels().list(
-                part='snippet,statistics,contentDetails',
+                part='snippet,statistics,contentDetails,brandingSettings',
                 id=batch,
                 maxResults=batch_size,
             ).execute()
@@ -628,6 +630,31 @@ class YouTube:
 
         print(f'Total channels scrapped: {i}')
         return data
+
+    @staticmethod
+    def filter_channels_by_keyword(search_pattern: str, data):
+
+        for channel in data:
+            description = channel['brandingSettings']['channel']['description']
+            keywords = channel['brandingSettings']['channel']['keywords']
+            keywords = keywords.split('"')
+            keywords = [_.strip() for _ in [_.strip() for _ in keywords] if _]
+            channel['brandingSettings']['channel']['keywords'] = keywords
+
+            if re.search(search_pattern, description.lower()):
+                if channel not in self.filtered_channels:
+                    self.filtered_channels.append(channel)
+                pattern_match = True
+            else:
+                pattern_match = False
+
+            if not pattern_match:
+                for word in keywords:
+                    if re.search(search_pattern, word):
+                        if channel not in self.filtered_channels:
+                            self.filtered_channels.append(channel)
+
+
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
