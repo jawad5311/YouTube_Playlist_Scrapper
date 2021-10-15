@@ -3,6 +3,7 @@ import re
 
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
@@ -332,14 +333,14 @@ class YouTube:
         print()
         print(f'Total Channels found: {len(self.ids)}')
 
-    def request_channels_data(self):
+    def request_channels_data(self) -> list:
         channels_data = []  # Holds channels data
         batch_size = 50  # No. channels to request data in single request
 
         # Creates id batches to request data and store response in list
         for batch_num in range(0, len(self.ids), batch_size):
             # Create batches
-            batch = data[batch_num: batch_num + batch_size]
+            batch = self.ids[batch_num: batch_num + batch_size]
             batch = ','.join(batch)  # Join id's with comma
 
             # Request channel data using channel id
@@ -480,7 +481,12 @@ class YouTube:
             except KeyError:
                 custom_url = 'NaN'
 
-            subs = item['statistics']['subscriberCount']  # No. of subscribers]
+            try:
+                subs = item['statistics']['subscriberCount']  # No. of subscribers]
+            except KeyError:
+                item['statistics']['subscriberCount'] = '0'
+                subs = item['statistics']['subscriberCount']
+
             vid_count = item['statistics']['videoCount']  # Total no. videos
             view_count = item['statistics']['viewCount']  # Total no. views
 
@@ -491,7 +497,7 @@ class YouTube:
                 'Title': channel_title,
                 'Subs': subs,
                 'Country': country,
-                'Contact': '',
+                'email': '',
                 'Channel_created_on': channel_date,
                 'Total_Videos': vid_count,
                 'Total_Views': view_count,
@@ -523,7 +529,8 @@ class YouTube:
 
         driver = webdriver.Chrome('chrome_driver/chromedriver.exe',
                                   options=chrome_options)
-
+        other_links = []
+        
         for i in range(len(channel_data)):
 
             url = f'https://{data.channel_URL[i]}/about'
@@ -663,15 +670,15 @@ class YouTube:
 if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
 
-    # yt = YouTube(API_KEY)
-    # service = yt.construct_service()
+    yt = YouTube(API_KEY)
+    yt.get_channels_id('nft art', no_of_channels=0)
+    channel_data = yt.request_channels_data()[:15]
+    channel_data = yt.extract_channel_data(channel_data)
+    channel_data = yt.scrap_emails(channel_data)
+    yt.create_csv(channel_data, 'nft_art_15_10_21')
+
 
     # playlist_id = yt.upload_response(service, channel_id)
     # videos = yt.get_playlist_items(service, playlist_id)
     # yt.create_csv(videos, 'Brian_Design')
 
-    # channel_ids = yt.get_channel_ids('how to finance')
-    # filtered_channels = yt.filter_channels(service, channel_ids)
-    # active_channels = yt.filter_active_channels(service, filtered_channels)
-    # data = yt.extract_channel_data(filtered_channels)
-    # yt.create_csv(data, 'finance_channels')
