@@ -633,12 +633,19 @@ class YouTube:
 
     @staticmethod
     def filter_channels_by_keyword(search_pattern: str, data):
-
         for channel in data:
-            description = channel['brandingSettings']['channel']['description']
-            keywords = channel['brandingSettings']['channel']['keywords']
-            keywords = keywords.split('"')
-            keywords = [_.strip() for _ in [_.strip() for _ in keywords] if _]
+            try:
+                description = channel['brandingSettings']['channel']['description']
+            except KeyError:
+                description = 'NA'
+
+            try:
+                keywords = channel['brandingSettings']['channel']['keywords']
+                keywords = keywords.split('"')
+                keywords = [_.strip() for _ in [_.strip() for _ in keywords] if _]
+            except KeyError:
+                keywords = []
+                
             channel['brandingSettings']['channel']['keywords'] = keywords
 
             if re.search(search_pattern, description.lower()):
@@ -653,8 +660,6 @@ class YouTube:
                     if re.search(search_pattern, word):
                         if channel not in self.filtered_channels:
                             self.filtered_channels.append(channel)
-
-
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
