@@ -2,6 +2,7 @@ import pandas as pd
 import re
 
 from googleapiclient.discovery import build
+import google_auth_oauthlib.flow
 from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -45,8 +46,16 @@ class YouTube:
             convert youtube duration format into seconds
     """
     def __init__(self, key):
+        API_SERVICE = 'youtube'
+        API_VERSION = 'v3'
+        self.api_service = API_SERVICE
+        self.api_version = API_VERSION
+
         self.key = key
         self.service = self.construct_service()
+
+        client_secrets_file = "secret_files/secret_key.json"
+        self.client_secrets_file = client_secrets_file
 
         channel_ids = []
         self.channel_ids = channel_ids
@@ -54,31 +63,31 @@ class YouTube:
         filtered_channels = []
         self.filtered_channels = filtered_channels
 
-        # self.secret_file = secret_file
-        # self.scopes = scopes
-
-    # def construct_service(self):
-    #     """
-    #         Responsible for creating service instance from 'google.Create_Service'
-    #     """
-    #     API_SERVICE = 'youtube'
-    #     API_VERSION = 'v3'
-    #     service = Create_Service(self.secret_file, API_SERVICE, API_VERSION, self.scopes)
-    #     return service
-
     def construct_service(self):
         """
         Creates service object from build method
         """
 
-        API_SERVICE = 'youtube'
-        API_VERSION = 'v3'
+        # API_SERVICE = 'youtube'
+        # API_VERSION = 'v3'
         service = build(
-            API_SERVICE,
-            API_VERSION,
+            self.api_service,
+            self.api_version,
             developerKey=self.key
         )
         return service
+
+    def oauth_service(self, scopes):
+        flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
+            self.client_secrets_file, scopes)
+
+        credentials = flow.run_console()
+
+        youtube = googleapiclient.discovery.build(
+            self.api_service,
+            self.api_version,
+            credentials=credentials)
+        return youtube
 
     def upload_response(self, channel_id: str) -> str:
         """
@@ -645,7 +654,7 @@ class YouTube:
                 keywords = [_.strip() for _ in [_.strip() for _ in keywords] if _]
             except KeyError:
                 keywords = []
-                
+
             channel['brandingSettings']['channel']['keywords'] = keywords
 
             if re.search(search_pattern, description.lower()):
@@ -660,6 +669,9 @@ class YouTube:
                     if re.search(search_pattern, word):
                         if channel not in self.filtered_channels:
                             self.filtered_channels.append(channel)
+
+    def sort_playlist_items(self):
+        pass
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:

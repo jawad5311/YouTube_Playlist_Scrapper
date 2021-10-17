@@ -4,6 +4,7 @@ secret_key.json
 code_testing.ipynb
 chrome_driver/
 *.xlsx
+secret_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
