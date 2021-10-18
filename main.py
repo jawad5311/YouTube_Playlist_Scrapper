@@ -111,16 +111,22 @@ class YouTube:
 
         return playlist_id
 
-    def get_playlist_items(self, playlist_Id: str) -> []:
+    def get_playlist_items(self,
+                           playlist_Id: str,
+                           for_sort_by: bool = False) -> list or tuple:
         """
-        Retrieve all videos information from playlist.
+        Retrieve all videos information from playlist and returns list of
+        videos information or tuple of (videos_id_in_playlist, videos_info)
+        if for_sort_by is True.
 
         Parameters:
             playlist_Id: str
                 Id of the playlist from which to retrieve data
 
         Returns:
-            List: contains information of all videos
+            List containing videos info
+            if for_sort_by is True:
+                Returns tuple of (videos_id_for_playlist, videos_info)
         """
 
         playlist_items = []
@@ -148,7 +154,7 @@ class YouTube:
             # Retrieve data while the next page is available
             while nextPageToken:
                 request = self.service.playlistItems().list(
-                    part='contentDetails',
+                    part='snippet',
                     playlistId=playlist_Id,
                     maxResults=50,  # max results per request (maximum: 50)
                     pageToken=nextPageToken
@@ -174,17 +180,7 @@ class YouTube:
             else:
                 raise
 
-        videos_id = []  # Holds all available videos id's
-
-        # Go through playlist items list and retrieve all videos id's
-        for video_id in playlist_items:
-            try:
-                id = video_id['snippet']['resourceId']['videoId']
-                videos_id.append(id)
-
-            except KeyError:
-                id = video_id['contentDetails']['videoId']
-                videos_id.append(id)
+        videos_id = [item['snippet']['resourceId']['videoId'] for item in playlist_items]  # Holds all available videos id's
 
         videos_info = []  # Holds info about all available videos
 
@@ -204,6 +200,10 @@ class YouTube:
             batch_items = response_videos['items']
             # Adding batch items to videos_info list
             videos_info.extend(batch_items)
+
+        if for_sort_by:
+            videos_id_in_playlist = [item['id'] for item in playlist_items]
+            return videos_id_in_playlist, videos_info
 
         return videos_info
 
@@ -266,7 +266,7 @@ class YouTube:
             comments.append(comment)
 
         data = pd.DataFrame({
-            'Video_URL': video_urls,
+            'video_URL': video_urls,
             'title': titles,
             'uploadDate': dates,
             'views': views,
