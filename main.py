@@ -138,7 +138,10 @@ class YouTube:
 
             items = response['items']  # Grabs only videos info from the response
             playlist_items.extend(items)
-            nextPageToken = response['nextPageToken']  # Grabs next page token
+            try:
+                nextPageToken = response['nextPageToken']  # Grabs next page token
+            except KeyError:
+                nextPageToken = ''
 
             current_page = 1
 
@@ -264,13 +267,13 @@ class YouTube:
 
         data = pd.DataFrame({
             'Video_URL': video_urls,
-            'Title': titles,
-            'Upload_Date': dates,
-            'Views': views,
-            'Duration': durations,
-            'Likes': likes,
-            'DisLikes': dislikes,
-            'Comments_Count': comments
+            'title': titles,
+            'uploadDate': dates,
+            'views': views,
+            'duration': durations,
+            'likes': likes,
+            'disLikes': dislikes,
+            'commentsCount': comments
         })
 
         return data
@@ -670,8 +673,28 @@ class YouTube:
                         if channel not in self.filtered_channels:
                             self.filtered_channels.append(channel)
 
-    def sort_playlist_items(self):
-        pass
+    def sort_playlist_items(self,
+                            playlist_Id,
+                            sort_by: str,
+                            ascending: bool = False):
+
+        sort_by_params = ['title', 'uploadDate', 'views', 'likes', 'disLikes', 'duration', 'commentsCount']
+        if sort_by not in sort_by_params:
+            raise Exception(
+                f"'{sort_by}' is not an acceptable keyword \n\n"
+                f"Please choose one of the following acceptable keywords: \n\n"
+                f"{', '.join(sort_by_params)}"
+            )
+
+        playlist_items = self.get_playlist_items(playlist_Id)
+        videos_data = self.get_videos_data(playlist_items)
+        videos_data.sort_values(sort_by,
+                                axis=0,
+                                ascending=ascending,
+                                inplace=True)
+
+
+
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
