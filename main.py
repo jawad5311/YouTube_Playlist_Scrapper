@@ -122,6 +122,8 @@ class YouTube:
         Parameters:
             playlist_Id: str
                 Id of the playlist from which to retrieve data
+            for_sort_by: bool
+                Default (False): If to use this data to set
 
         Returns:
             List containing videos info
@@ -676,6 +678,7 @@ class YouTube:
     def sort_playlist_items(self,
                             playlist_Id,
                             sort_by: str,
+                            videos_to_sort: int = 3,
                             ascending: bool = False):
 
         sort_by_params = ['title', 'uploadDate', 'views', 'likes', 'disLikes', 'duration', 'commentsCount']
@@ -686,12 +689,22 @@ class YouTube:
                 f"{', '.join(sort_by_params)}"
             )
 
-        playlist_items = self.get_playlist_items(playlist_Id)
+        item_id_in_playlist, playlist_items = self.get_playlist_items(playlist_Id)
         videos_data = self.get_videos_data(playlist_items)
+
+        videos_data['item_id_in_playlist'] = item_id_in_playlist
+
         videos_data.sort_values(sort_by,
                                 axis=0,
                                 ascending=ascending,
                                 inplace=True)
+
+        if videos_to_sort >= len(videos_data):
+            videos_to_sort = len(videos_data)
+
+        for i in range(videos_to_sort):
+            pass
+
 
 
 
