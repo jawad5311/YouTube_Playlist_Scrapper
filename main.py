@@ -83,7 +83,7 @@ class YouTube:
 
         credentials = flow.run_console()
 
-        youtube = googleapiclient.discovery.build(
+        youtube = build(
             self.api_service,
             self.api_version,
             credentials=credentials)
@@ -137,7 +137,7 @@ class YouTube:
         try:
             # Create request to retrieve playlist items
             request = self.service.playlistItems().list(
-                part='contentDetails',
+                part='snippet',
                 playlistId=playlist_Id,
                 maxResults=50  # Max results per request (maximum: 50)
             )
@@ -678,7 +678,7 @@ class YouTube:
     def sort_playlist_items(self,
                             playlist_Id,
                             sort_by: str,
-                            videos_to_sort: int = 3,
+                            videos_to_sort: int = 5,
                             ascending: bool = False):
 
         sort_by_params = ['title', 'uploadDate', 'views', 'likes', 'disLikes', 'duration', 'commentsCount']
@@ -689,7 +689,8 @@ class YouTube:
                 f"{', '.join(sort_by_params)}"
             )
 
-        item_id_in_playlist, playlist_items = self.get_playlist_items(playlist_Id)
+        item_id_in_playlist, playlist_items = self.get_playlist_items(playlist_Id,
+                                                                      for_sort_by=True)
         videos_data = self.get_videos_data(playlist_items)
 
         videos_data['item_id_in_playlist'] = item_id_in_playlist
@@ -697,10 +698,14 @@ class YouTube:
         videos_data.sort_values(sort_by,
                                 axis=0,
                                 ascending=ascending,
+                                ignore_index=True,
                                 inplace=True)
 
         if videos_to_sort >= len(videos_data):
             videos_to_sort = len(videos_data)
+
+        scope = ["https://www.googleapis.com/auth/youtube.force-ssl"]
+        youtube = self.oauth_service(scopes=scope)
 
         for i in range(videos_to_sort):
             video_id = videos_data.video_URL[i][-11:]
@@ -717,9 +722,12 @@ class YouTube:
                 "id": video_id_in_playlist
             }
 
+            youtube.playlistItems().update(
+                part='snippet',
+                body=body
+            ).execute()
 
-
-
+        print(f'Total Videos Sorted: {videos_to_sort}')
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
@@ -763,11 +771,13 @@ if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
 
     yt = YouTube(API_KEY)
-    yt.get_channels_id('nft art', no_of_channels=0)
-    channel_data = yt.request_channels_data()[:15]
-    channel_data = yt.extract_channel_data(channel_data)
-    channel_data = yt.scrap_emails(channel_data)
-    yt.create_csv(channel_data, 'nft_art_15_10_21')
+    yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
+                           'likes')
+    # yt.get_channels_id('nft art', no_of_channels=0)
+    # channel_data = yt.request_channels_data()[:15]
+    # channel_data = yt.extract_channel_data(channel_data)
+    # channel_data = yt.scrap_emails(channel_data)
+    # yt.create_csv(channel_data, 'nft_art_15_10_21')
 
 
     # playlist_id = yt.upload_response(service, channel_id)
