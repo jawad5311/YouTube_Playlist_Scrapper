@@ -703,7 +703,19 @@ class YouTube:
             videos_to_sort = len(videos_data)
 
         for i in range(videos_to_sort):
-            pass
+            video_id = videos_data.video_URL[i][-11:]
+            video_id_in_playlist = videos_data.item_id_in_playlist[i]
+            body = {
+                "snippet": {
+                    "playlistId": "PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp",
+                    "resourceId": {
+                        "kind": "youtube#video",
+                        "videoId": video_id
+                    },
+                    "position": i
+                },
+                "id": video_id_in_playlist
+            }
 
 
 
