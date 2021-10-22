@@ -741,8 +741,18 @@ class YouTube:
         ).execute()
 
         comments_data.extend(response['items'])
-
         next_page_token = response['nextPageToken']
+
+        while next_page_token:
+            response = self.service.commentThreads().list(
+                part='id,snippet,replies',
+                allThreadsRelatedToChannelId=channel_id,
+                pageToken=next_page_token,
+                maxResults=100
+            ).execute()
+
+            comments_data.extend(response['items'])
+            next_page_token = response['nextPageToken']
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
