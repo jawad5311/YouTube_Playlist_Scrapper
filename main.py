@@ -730,7 +730,7 @@ class YouTube:
         print(f'Total Videos Sorted: {videos_to_sort}')
 
     def retrieve_comments_by_channelId(self,
-                                       channel_id: str):
+                                       channel_id: str) -> list:
 
         comments_data = []
 
@@ -753,6 +753,31 @@ class YouTube:
 
             comments_data.extend(response['items'])
             next_page_token = response['nextPageToken']
+
+        return comments_data
+
+    @staticmethod
+    def extract_comments_data(comments_data):
+
+        for comment in comments_data:
+            comment_id = comment['id']
+            video_id = comment['snippet']['videoId']
+            video_url = f'https://www.youtube.com/watch?v={video_id}'
+            main_comment = comment['snippet']['topLevelComment']['snippet']['textDisplay']
+            main_comment_author = comment['snippet']['topLevelComment']['snippet']['authorDisplayName']
+            main_comment_author_url = comment['snippet']['topLevelComment']['snippet']['authorChannelUrl']
+            main_comment_published = comment['snippet']['topLevelComment']['snippet']['publishedAt']
+
+            # main_comment_time = datetime.strptime(main_comment_published, '%Y-%m-%d')
+            main_comment_replies = int(comment['snippet']['totalReplyCount'])
+
+            if main_comment_replies:
+                replies_data = comment['replies']['comments']
+                for i in range(len(replies_data)):
+
+
+
+
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
