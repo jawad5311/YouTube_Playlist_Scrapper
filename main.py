@@ -729,6 +729,21 @@ class YouTube:
 
         print(f'Total Videos Sorted: {videos_to_sort}')
 
+    def retrieve_comments_by_channelId(self,
+                                       channel_id: str):
+
+        comments_data = []
+
+        response = self.service.commentThreads().list(
+            part='id,snippet,replies',
+            allThreadsRelatedToChannelId=channel_id,
+            maxResults=100
+        ).execute()
+
+        comments_data.extend(response['items'])
+
+        next_page_token = response['nextPageToken']
+
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
         """
@@ -773,14 +788,3 @@ if __name__ == '__main__':
     yt = YouTube(API_KEY)
     yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
                            'likes')
-    # yt.get_channels_id('nft art', no_of_channels=0)
-    # channel_data = yt.request_channels_data()[:15]
-    # channel_data = yt.extract_channel_data(channel_data)
-    # channel_data = yt.scrap_emails(channel_data)
-    # yt.create_csv(channel_data, 'nft_art_15_10_21')
-
-
-    # playlist_id = yt.upload_response(service, channel_id)
-    # videos = yt.get_playlist_items(service, playlist_id)
-    # yt.create_csv(videos, 'Brian_Design')
-
