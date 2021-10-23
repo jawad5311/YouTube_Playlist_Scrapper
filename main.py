@@ -45,6 +45,7 @@ class YouTube:
         convert_duration_to_seconds():
             convert youtube duration format into seconds
     """
+
     def __init__(self, key):
         API_SERVICE = 'youtube'
         API_VERSION = 'v3'
@@ -182,7 +183,8 @@ class YouTube:
             else:
                 raise
 
-        videos_id = [item['snippet']['resourceId']['videoId'] for item in playlist_items]  # Holds all available videos id's
+        videos_id = [item['snippet']['resourceId']['videoId'] for item in
+                     playlist_items]  # Holds all available videos id's
 
         videos_info = []  # Holds info about all available videos
 
@@ -317,10 +319,10 @@ class YouTube:
         # Display current page that is being scrapped on terminal
         current_page = 1
         print(f'Current Page: {current_page}')
-        channel_range = no_of_channels // 50
+        channel_range = 0
 
         # Request search for 5 times
-        for i in range(channel_range):
+        while next_page_token:
             response = self.service.search().list(
                 part='snippet',
                 q=query,
@@ -329,11 +331,16 @@ class YouTube:
             ).execute()
 
             search_response.extend(response['items'])
-            next_page_token = response['nextPageToken']
+            try:
+                next_page_token = response['nextPageToken']
+            except KeyError:
+                next_page_token = False
             # print(f'Next Page token: {next_page_token}')
-            current_page += 1
+            channel_range += 50
             if current_page % 2 == 0:
                 print(f'Current Page: {current_page}')
+            if channel_range > no_of_channels:
+                break
 
         channels_ids = []  # Holds channels id's
 
@@ -376,7 +383,7 @@ class YouTube:
     @staticmethod
     def filter_channels(data: list,
                         subs_min: int = 1000,
-                        subs_max: int = 100000,
+                        subs_max: int = 1000000,
                         min_vid_count: int = 5) -> list:
         """
             Filter channels based on no. of videos and subs count.
@@ -546,7 +553,7 @@ class YouTube:
         driver = webdriver.Chrome('chrome_driver/chromedriver.exe',
                                   options=chrome_options)
         other_links = []
-        
+
         for i in range(len(channel_data)):
 
             url = f'https://{data.channel_URL[i]}/about'
@@ -729,8 +736,8 @@ class YouTube:
 
         print(f'Total Videos Sorted: {videos_to_sort}')
 
-    def retrieve_comments_by_channelId(self,
-                                       channel_id: str) -> list:
+    def retrieve_channel_comments(self,
+                                  channel_id: str) -> list:
 
         comments_data = []
 
@@ -741,7 +748,10 @@ class YouTube:
         ).execute()
 
         comments_data.extend(response['items'])
-        next_page_token = response['nextPageToken']
+        try:
+            next_page_token = response['nextPageToken']
+        except KeyError:
+            next_page_token = False
 
         while next_page_token:
             response = self.service.commentThreads().list(
@@ -752,7 +762,11 @@ class YouTube:
             ).execute()
 
             comments_data.extend(response['items'])
-            next_page_token = response['nextPageToken']
+
+            try:
+                next_page_token = response['nextPageToken']
+            except KeyError:
+                next_page_token = False
 
         return comments_data
 
@@ -771,13 +785,12 @@ class YouTube:
             # main_comment_time = datetime.strptime(main_comment_published, '%Y-%m-%d')
             main_comment_replies = int(comment['snippet']['totalReplyCount'])
 
+
+
             if main_comment_replies:
                 replies_data = comment['replies']['comments']
                 for i in range(len(replies_data)):
-
-
-
-
+                    globals()[f'reply_id_{i}'] = replies_data[i]['id']
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
@@ -811,7 +824,7 @@ class YouTube:
             int: total number of seconds
         """
 
-        h = int(re.search('\d+H', duration)[0][:-1]) * 60**2 if re.search('\d+H', duration) else 0
+        h = int(re.search('\d+H', duration)[0][:-1]) * 60 ** 2 if re.search('\d+H', duration) else 0
         m = int(re.search('\d+M', duration)[0][:-1]) * 60 if re.search('\d+M', duration) else 0
         s = int(re.search('\d+S', duration)[0][:-1]) if re.search('\d+S', duration) else 0
         return h + m + s
