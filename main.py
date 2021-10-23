@@ -773,6 +773,14 @@ class YouTube:
     @staticmethod
     def extract_comments_data(comments_data):
 
+        videos_url = []
+        comments_id = []
+        main_comments = []
+        main_comments_authors = []
+        main_comments_authors_url = []
+        main_comments_published = []
+        total_comment_replies = []
+
         for comment in comments_data:
             comment_id = comment['id']
             video_id = comment['snippet']['videoId']
@@ -785,12 +793,18 @@ class YouTube:
             # main_comment_time = datetime.strptime(main_comment_published, '%Y-%m-%d')
             main_comment_replies = int(comment['snippet']['totalReplyCount'])
 
+            videos_url.append(video_url)
+            comments_id.append(comment_id)
+            main_comments.append(main_comment)
+            main_comments_authors.append(main_comment_author)
+            main_comments_authors_url.append(main_comment_author_url)
+            main_comments_published.append(main_comment_published)
+            total_comment_replies.append(main_comment_replies)
 
-
-            if main_comment_replies:
-                replies_data = comment['replies']['comments']
-                for i in range(len(replies_data)):
-                    globals()[f'reply_id_{i}'] = replies_data[i]['id']
+            # if main_comment_replies:
+            #     replies_data = comment['replies']['comments']
+            #     for i in range(len(replies_data)):
+            #         globals()[f'reply_id_{i}'] = replies_data[i]['id']
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
