@@ -732,6 +732,7 @@ class YouTube:
         response = self.service.commentThreads().list(
             part='id,snippet,replies',
             allThreadsRelatedToChannelId=channel_id,
+            order='relevance',
             maxResults=100
         ).execute()
 
@@ -758,8 +759,7 @@ class YouTube:
 
         return comments_data
 
-    @staticmethod
-    def extract_comments_data(comments_data):
+    def extract_comments_data(self, comments_data):
 
         videos_url = []
         comments_id = []
@@ -804,6 +804,8 @@ class YouTube:
             'comment_replies': total_comment_replies,
         })
 
+        comment_index = 0
+
         for comment in comments_data:
             comment_replies = int(comment['snippet']['totalReplyCount'])
 
@@ -818,10 +820,16 @@ class YouTube:
                     reply_likes = replies_data[i]['snippet']['likeCount']
                     reply_added = replies_data[i]['snippet']['publishedAt']
 
-                    comments_df[f'reply_id_{i}'][i] = reply_id
+                    self.add_data_to_dict(reply_id, comments_df, f'reply_id_{i}', comment_index)
+                    self.add_data_to_dict(reply_text, comments_df, f'reply_text_{i}', comment_index)
+                    self.add_data_to_dict(reply_author, comments_df, f'reply_author_{i}', comment_index)
+                    self.add_data_to_dict(reply_channel, comments_df, f'reply_channel_{i}', comment_index)
+                    self.add_data_to_dict(reply_likes, comments_df, f'reply_likes_{i}', comment_index)
+                    self.add_data_to_dict(reply_added, comments_df, f'reply_added_{i}', comment_index)
 
+            comment_index += 1
 
-
+        return comments_df
 
     @staticmethod
     def add_data_to_dict(
