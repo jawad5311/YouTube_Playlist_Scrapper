@@ -530,19 +530,7 @@ class YouTube:
 
         return pd.DataFrame(channel_info)
 
-    @staticmethod
-    def scrap_emails(data: pd.DataFrame):
-
-        def add_data(
-                data: str,
-                data_frame: pd.DataFrame,
-                col_name: str,
-                index: int):
-            try:
-                data_frame[col_name][index] = data
-            except KeyError:
-                data_frame[col_name] = ''
-                data_frame[col_name][index] = data
+    def scrap_emails(self, data: pd.DataFrame):
 
         def extract_emails(text):
             return re.findall(r'[\w\.-]+@[\w\.-]+\.\w+', text)
@@ -617,27 +605,27 @@ class YouTube:
                 link = link[q_start_index:].replace('%3A', ':').replace('%2F', '/')
                 if re.search('instagram.com', link):
                     link_title = 'Insta'
-                    add_data(link, data, link_title, i)
+                    self.add_data_to_dict(link, data, link_title, i)
 
                 elif re.search('twitter.com', link):
                     link_title = 'Twitter'
-                    add_data(link, data, link_title, i)
+                    self.add_data_to_dict(link, data, link_title, i)
 
                 elif re.search('linkedin.com', link):
                     link_title = 'Linkedin'
-                    add_data(link, data, link_title, i)
+                    self.add_data_to_dict(link, data, link_title, i)
 
                 elif re.search('facebook.com', link):
                     link_title = 'Facebook'
-                    add_data(link, data, link_title, i)
+                    self.add_data_to_dict(link, data, link_title, i)
 
                 elif re.search('discord', link):
                     link_title = 'Discord'
-                    add_data(link, data, link_title, i)
+                    self.add_data_to_dict(link, data, link_title, i)
 
                 elif re.search('tiktok', link):
                     link_title = 'tiktok'
-                    add_data(link, data, link_title, i)
+                    self.add_data_to_dict(link, data, link_title, i)
 
                 elif re.search('youtube.com', link):
                     pass
@@ -816,8 +804,36 @@ class YouTube:
             'comment_replies': total_comment_replies,
         })
 
+        for comment in comments_data:
+            comment_replies = int(comment['snippet']['totalReplyCount'])
+
+            if comment_replies:
+                replies_data = comment['replies']['comments']
+
+                for i in range(len(replies_data)):
+                    reply_id = replies_data[i]['id']
+                    reply_text = replies_data[i]['snippet']['textDisplay']
+                    reply_author = replies_data[i]['snippet']['authorDisplayName']
+                    reply_channel = replies_data[i]['snippet']['authorChannelUrl']
+                    reply_likes = replies_data[i]['snippet']['likeCount']
+                    reply_added = replies_data[i]['snippet']['publishedAt']
+
+                    comments_df[f'reply_id_{i}'][i] = reply_id
 
 
+
+
+    @staticmethod
+    def add_data_to_dict(
+            data: str,
+            data_frame: pd.DataFrame,
+            col_name: str,
+            index: int):
+        try:
+            data_frame[col_name][index] = data
+        except KeyError:
+            data_frame[col_name] = ''
+            data_frame[col_name][index] = data
 
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
