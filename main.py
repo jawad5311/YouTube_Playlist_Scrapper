@@ -806,6 +806,19 @@ class YouTube:
             #     for i in range(len(replies_data)):
             #         globals()[f'reply_id_{i}'] = replies_data[i]['id']
 
+        comments_df = pd.DataFrame({
+            'video_url': videos_url,
+            'comment_id': comments_id,
+            'comment_text': main_comments,
+            'comment_date': main_comments_published,
+            'comment_author': main_comments_authors,
+            'comment_author_channel': main_comments_authors_url,
+            'comment_replies': total_comment_replies,
+        })
+
+
+
+
     @staticmethod
     def create_csv(data: pd.DataFrame, filename: str) -> None:
         """
