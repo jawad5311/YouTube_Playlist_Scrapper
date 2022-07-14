@@ -89,27 +89,11 @@ class YouTube:
             credentials=credentials)
         return youtube
 
-    def upload_response(self, channel_id: str) -> str:
-        """
-        Send request to retrieve uploaded videos response as playlist ID.
+    def extract_channel_videos(self):
 
-            Parameters:
-                channel_id: str
-                    Channel's id required for request
-            Returns:
-                str: playlist_id
-        """
-        request = self.service.channels().list(
-            part='contentDetails',
-            id=channel_id
-        )
+        return
 
-        response = request.execute()  # Send request and receive response
 
-        # Extract playlist_id from the received response
-        playlist_id = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
-
-        return playlist_id
 
     def get_playlist_items(self,
                            playlist_Id: str,
