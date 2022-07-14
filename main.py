@@ -1,5 +1,4 @@
 import pandas as pd
-import re
 
 from googleapiclient.discovery import build
 import google_auth_oauthlib.flow
@@ -861,24 +860,6 @@ class YouTube:
         data.to_csv(f'{filename}.csv',
                     index=False)
         print(f'csv file created at location: {os.getcwd()}\\{filename}.csv')
-
-    @staticmethod
-    def convert_duration_to_seconds(duration: str) -> int:
-        """
-        Converts video duration to seconds
-
-        Parameters:
-            duration: str ->.
-                time duration in format '00H00M00S'
-
-        Returns:
-            int: total number of seconds
-        """
-
-        h = int(re.search('\d+H', duration)[0][:-1]) * 60 ** 2 if re.search('\d+H', duration) else 0
-        m = int(re.search('\d+M', duration)[0][:-1]) * 60 if re.search('\d+M', duration) else 0
-        s = int(re.search('\d+S', duration)[0][:-1]) if re.search('\d+S', duration) else 0
-        return h + m + s
 
 
 if __name__ == '__main__':
