@@ -32,9 +32,34 @@ def create_csv(data: pd.DataFrame, filename: str) -> None:
                 Note: provide file name without .csv
 
         Returns:
-            None -> Create a csv file at the current working directory
+            Create a csv file at the current working directory
     """
     print(f'Creating .csv file with name: {filename}')
     data.to_csv(f'{filename}.csv',
                 index=False)
     print(f'csv file created at location: {os.getcwd()}\\{filename}.csv')
+
+
+def add_data_to_dataframe(
+        data: str,
+        data_frame: pd.DataFrame,
+        col_name: str,
+        index: int):
+    """
+    Args:
+        data: Data that is needed to add to the dict
+        data_frame: Pandas dataframe in which the data needs to add
+        col_name: Column name in dataframe
+        index: Index at which data needs to be added
+
+    Returns:
+        Modifies existing dataframe
+
+    Use to add data to pandas dataframe with KeyError exception handling
+    """
+    try:
+        data_frame[col_name][index] = data
+    except KeyError:
+        data_frame[col_name] = ''
+        data_frame[col_name][index] = data
+

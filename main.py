@@ -830,37 +830,6 @@ class YouTube:
 
         return comments_df
 
-    @staticmethod
-    def add_data_to_dict(
-            data: str,
-            data_frame: pd.DataFrame,
-            col_name: str,
-            index: int):
-        try:
-            data_frame[col_name][index] = data
-        except KeyError:
-            data_frame[col_name] = ''
-            data_frame[col_name][index] = data
-
-    @staticmethod
-    def create_csv(data: pd.DataFrame, filename: str) -> None:
-        """
-            Create a csv file in the current working directory.
-
-            Parameters:
-                data: Pandas Dataframe
-                filename: str
-                    Name by which to file is to be saved.
-                    Note: provide file name without .csv
-
-            Returns:
-                None -> Create a csv file at the current working directory
-        """
-        print(f'Creating .csv file with name: {filename}')
-        data.to_csv(f'{filename}.csv',
-                    index=False)
-        print(f'csv file created at location: {os.getcwd()}\\{filename}.csv')
-
 
 if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
