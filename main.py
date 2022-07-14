@@ -3,14 +3,16 @@ import pandas as pd
 from googleapiclient.discovery import build
 import google_auth_oauthlib.flow
 from datetime import datetime, timedelta
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException
+# from selenium import webdriver
+# from selenium.webdriver.chrome.options import Options
+# from selenium.common.exceptions import NoSuchElementException
 
 import os
 import dotenv
 
 dotenv.load_dotenv()
+
+from helper_functions import channel, playlist, helper_funcs
 
 
 # Creating YouTube class to communicate with YouTube API
@@ -89,110 +91,21 @@ class YouTube:
             credentials=credentials)
         return youtube
 
-    def extract_channel_videos(self):
+    def extract_channel_videos(self,
+                               channel_id: str):
 
-        return
+        # Retrieve channel uploads ID
+        channel_uploads_id = channel.get_channel_uploads_id(
+            self.service,
+            channel_id=channel_id)
 
+        # Retrieve Videos ID's based using channel upload playlist ID
+        videos_ids = playlist.get_videos_id(
+            self.service,
+            playlist_id=channel_uploads_id)
 
+        print(len(videos_ids))
 
-    def get_playlist_items(self,
-                           playlist_Id: str,
-                           for_sort_by: bool = False) -> list or tuple:
-        """
-        Retrieve all videos information from playlist and returns list of
-        videos information or tuple of (videos_id_in_playlist, videos_info)
-        if for_sort_by is True.
-
-        Parameters:
-            playlist_Id: str
-                Id of the playlist from which to retrieve data
-            for_sort_by: bool
-                Default (False): If to use this data to set
-
-        Returns:
-            List containing videos info
-            if for_sort_by is True:
-                Returns tuple of (videos_id_for_playlist, videos_info)
-        """
-
-        playlist_items = []
-
-        # Adding KeyError exception handling for channel less than 50 videos
-        try:
-            # Create request to retrieve playlist items
-            request = self.service.playlistItems().list(
-                part='snippet',
-                playlistId=playlist_Id,
-                maxResults=50  # Max results per request (maximum: 50)
-            )
-
-            response = request.execute()  # Send request and receive response
-
-            items = response['items']  # Grabs only videos info from the response
-            playlist_items.extend(items)
-            try:
-                nextPageToken = response['nextPageToken']  # Grabs next page token
-            except KeyError:
-                nextPageToken = ''
-
-            current_page = 1
-
-            # Retrieve data while the next page is available
-            while nextPageToken:
-                request = self.service.playlistItems().list(
-                    part='snippet',
-                    playlistId=playlist_Id,
-                    maxResults=50,  # max results per request (maximum: 50)
-                    pageToken=nextPageToken
-                )
-
-                response = request.execute()  # Send request
-
-                print(f'Current Page: {current_page}')  # prints current page
-                current_page += 1
-
-                # Add items to playlist_items that are retrieved from next page
-                playlist_items.extend(response['items'])
-                nextPageToken = response.get('nextPageToken')
-
-            print(f'Total Videos found: {len(playlist_items)}')
-
-        # If KeyError occurs, prints out the total videos found and pass the error
-        except KeyError as err:
-            # If KeyError is for next page than continue the script
-            if err == 'nextPageToken':
-                print(f'Total Videos found: {len(playlist_items)}')
-                pass
-            else:
-                raise
-
-        videos_id = [item['snippet']['resourceId']['videoId'] for item in
-                     playlist_items]  # Holds all available videos id's
-
-        videos_info = []  # Holds info about all available videos
-
-        # Loop through all videos id's and retrieve info
-        for batch_num in range(0, len(videos_id), 50):
-            # Create batches of videos to request data
-            videos_batch = videos_id[batch_num: batch_num + 50]  # Batch Size: 50
-
-            # Send request to retrieve video's details
-            response_videos = self.service.videos().list(
-                # video details to be retrieved for each video
-                part='contentDetails,snippet,statistics',
-                id=videos_batch,
-                maxResults=50
-            ).execute()
-            # batch items received from videos response
-            batch_items = response_videos['items']
-            # Adding batch items to videos_info list
-            videos_info.extend(batch_items)
-
-        if for_sort_by:
-            videos_id_in_playlist = [item['id'] for item in playlist_items]
-            return videos_id_in_playlist, videos_info
-
-        return videos_info
 
     @staticmethod
     def get_videos_data(data: list) -> pd.DataFrame:
@@ -819,5 +732,7 @@ if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
 
     yt = YouTube(API_KEY)
-    yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
-                           'likes')
+    # yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
+    #                        'likes')
+
+    yt.extract_channel_videos('UCD6ArU-AYbfIj5sx2L4SZAQ')
