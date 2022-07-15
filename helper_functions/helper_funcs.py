@@ -34,10 +34,15 @@ def create_csv(data: pd.DataFrame, filename: str) -> None:
         Returns:
             Create a csv file at the current working directory
     """
-    print(f'Creating .csv file with name: {filename}')
-    data.to_csv(f'{filename}.csv',
+    print(f'Creating file: {filename}.csv')
+
+    path = f'{os.getcwd()}/data'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    data.to_csv(f'{os.getcwd()}/data/{filename}.csv',
                 index=False)
-    print(f'csv file created at: {os.getcwd()}\\{filename}.csv')
+    print(f'File created at: {os.getcwd()}/data/{filename}.csv')
 
 
 def add_data_to_dataframe(

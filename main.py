@@ -119,21 +119,30 @@ class YouTube:
         helper_funcs.create_csv(videos_data, filename)
 
     def extract_videos_from_playlist(self,
-                                     youtube_playlist: str):
+                                     youtube_playlist: str,
+                                     filename: str):
+        """
+        Args:
+            youtube_playlist: YouTube playlist ID or playlist URL
+            filename: Name of the output file without extension
 
-        youtube_playlist = youtube_playlist.replace('/', '')
-        if len(youtube_playlist) != 34:
-            # grabs playlist ID in the url
-            youtube_playlist = re.search(
-                '(?<=list=)[a-zA-z0-9-_]+',  # re pattern to extract playlist ID
-                youtube_playlist
-            )[0]
+        Returns:
+            Creates a .csv file in the current working directory
 
+        Extract all videos' information that are present in the playlist
+        """
 
+        # Grabs playlist id
+        playlist_id = helper_funcs.extract_playlist_id(youtube_playlist)
 
+        # Grabs videos ID's from playlist
+        videos_ids = playlist.get_videos_id(self.service, playlist_id)
 
+        # Retrieve videos data
+        videos_data = video.get_videos_data(self.service, videos_ids)
 
-
+        # Creates a CSV file in the current working directory
+        helper_funcs.create_csv(videos_data, filename)
 
     def get_channels_id(self, query: str, no_of_channels: int = 300) -> None:
         """
@@ -692,4 +701,9 @@ if __name__ == '__main__':
     # yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
     #                        'likes')
 
-    yt.extract_channel_videos('UCwKKyoOAhd7EE9pALtXoz_A', 'test_data')
+    # yt.extract_channel_videos('UCwKKyoOAhd7EE9pALtXoz_A', 'test_data')
+
+    yt.extract_videos_from_playlist(
+        'https://www.youtube.com/playlist?list=PLs3IFJPw3G9KL3huzPS7g-0PCbS7Auc7I',
+        'tkinter_tutorials'
+    )
