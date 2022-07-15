@@ -1,7 +1,5 @@
 
 
-
-
 def get_channel_uploads_id(service, channel_id: str) -> str:
     """
         Parameters:
