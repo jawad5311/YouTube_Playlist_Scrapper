@@ -12,7 +12,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-from helper_functions import channel, playlist, helper_funcs
+from helper_functions import channel, video, playlist, helper_funcs
 
 
 # Creating YouTube class to communicate with YouTube API
@@ -92,19 +92,34 @@ class YouTube:
         return youtube
 
     def extract_channel_videos(self,
-                               channel_id: str):
+                               channel_id: str,
+                               filename: str):
+        """
+        Args:
+            channel_id: ID of the YouTube Channel
+            filename: Name of output file without extension
+
+        Returns:
+            Return CSV file containing channel all videos data
+
+        Extract channel videos data using YouTube Channel ID and creates
+        a CSV file in the current working directory
+        """
 
         # Retrieve channel uploads ID
-        channel_uploads_id = channel.get_channel_uploads_id(
-            self.service,
-            channel_id=channel_id)
+        channel_uploads_id = channel.get_channel_uploads_id(self.service, channel_id)
 
         # Retrieve Videos ID's based using channel upload playlist ID
-        videos_ids = playlist.get_videos_id(
-            self.service,
-            playlist_id=channel_uploads_id)
+        videos_ids = playlist.get_videos_id(self.service, channel_uploads_id)
 
-        print(len(videos_ids))
+        # Retrieve Videos Data
+        videos_data = video.get_videos_data(self.service, videos_ids)
+
+        # Creates a CSV file in the current working directory
+        helper_funcs.create_csv(videos_data, filename)
+
+
+
 
 
     @staticmethod
@@ -735,4 +750,4 @@ if __name__ == '__main__':
     # yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
     #                        'likes')
 
-    yt.extract_channel_videos('UCD6ArU-AYbfIj5sx2L4SZAQ')
+    yt.extract_channel_videos('UCwKKyoOAhd7EE9pALtXoz_A', 'test_data')

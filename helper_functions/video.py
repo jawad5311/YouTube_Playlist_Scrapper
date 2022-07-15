@@ -4,9 +4,19 @@ from helper_functions import helper_funcs
 
 
 def get_videos_data(service,
-                    videos_id: list):
+                    videos_id: list) -> pd.DataFrame:
+    """
+    Args:
+        service: YouTube API service instance
+        videos_id: list of videos ID's
 
-    videos_data = []
+    Returns:
+        Pandas dataframe
+
+    Retrieve YouTube videos statistics and creates data frame
+    """
+
+    videos_data = []  # Use to hold videos info
 
     for batch_range in range(0, len(videos_id), 50):
         # Creates videos batches of 50
