@@ -118,80 +118,22 @@ class YouTube:
         # Creates a CSV file in the current working directory
         helper_funcs.create_csv(videos_data, filename)
 
+    def extract_videos_from_playlist(self,
+                                     youtube_playlist: str):
+
+        youtube_playlist = youtube_playlist.replace('/', '')
+        if len(youtube_playlist) != 34:
+            # grabs playlist ID in the url
+            youtube_playlist = re.search(
+                '(?<=list=)[a-zA-z0-9-_]+',  # re pattern to extract playlist ID
+                youtube_playlist
+            )[0]
 
 
 
 
-    @staticmethod
-    def get_videos_data(data: list) -> pd.DataFrame:
-        """
-        Creates a pandas dataframe from the data
 
-        Parameters:
-            data: list
-                Data requested using get_playlist_items()
 
-        Returns:
-            Pandas DataFrame
-        """
-
-        columns = ['video_urls', 'titles', 'dates', 'views', 'durations', 'likes', 'dislikes', 'comments']
-
-        # Create empty list for each column
-        for _ in columns:
-            # globals() function converts string to variable name
-            globals()[_] = []
-
-        for item in data:
-            title = item['snippet']['title']
-            date = item['snippet']['publishedAt'][:10]
-            view = item['statistics']['viewCount']
-            duration = item['contentDetails']['duration']
-
-            try:
-                like = item['statistics']['likeCount']
-            except KeyError:
-                item['statistics']['likeCount'] = '0'
-                like = item['statistics']['likeCount']
-
-            try:
-                dislike = item['statistics']['dislikeCount']
-            except KeyError:
-                item['statistics']['dislikeCount'] = '0'
-                dislike = item['statistics']['dislikeCount']
-
-            try:
-                comment = item['statistics']['commentCount']
-            except KeyError:
-                item['statistics']['commentCount'] = '0'
-                comment = item['statistics']['commentCount']
-
-            video_url = item['id']
-            video_url = f'https://www.youtube.com/watch?v={video_url}'
-
-            duration = YouTube.convert_duration_to_seconds(duration)
-
-            video_urls.append(video_url)
-            titles.append(title)
-            dates.append(date)
-            views.append(view)
-            durations.append(duration)
-            likes.append(like)
-            dislikes.append(dislike)
-            comments.append(comment)
-
-        data = pd.DataFrame({
-            'video_URL': video_urls,
-            'title': titles,
-            'uploadDate': dates,
-            'views': views,
-            'duration': durations,
-            'likes': likes,
-            'disLikes': dislikes,
-            'commentsCount': comments
-        })
-
-        return data
 
     def get_channels_id(self, query: str, no_of_channels: int = 300) -> None:
         """

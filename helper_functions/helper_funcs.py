@@ -37,7 +37,7 @@ def create_csv(data: pd.DataFrame, filename: str) -> None:
     print(f'Creating .csv file with name: {filename}')
     data.to_csv(f'{filename}.csv',
                 index=False)
-    print(f'csv file created at location: {os.getcwd()}\\{filename}.csv')
+    print(f'csv file created at: {os.getcwd()}\\{filename}.csv')
 
 
 def add_data_to_dataframe(
@@ -63,3 +63,23 @@ def add_data_to_dataframe(
         data_frame[col_name] = ''
         data_frame[col_name][index] = data
 
+
+def extract_playlist_id(url):
+    """
+    Args:
+        url: YouTube playlist url
+
+    Returns:
+        YouTube Playlist ID
+
+    Extracts YouTube playlist ID from the playlist url...
+    """
+    url = url.replace('/', '')
+    if len(url) != 34:
+        # grabs playlist ID in the url
+        url = re.search(
+            '(?<=list=)[a-zA-z0-9-_]+',  # re pattern to extract playlist ID
+            url
+        )[0]
+
+    return url
