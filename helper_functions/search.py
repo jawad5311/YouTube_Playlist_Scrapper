@@ -45,9 +45,39 @@ def search_by_keyword(service,
         if item_id not in ids:
             ids.append(item_id)  # Appends IDs' to the list
 
+    try:
+        next_page_token = response['nextPageToken']
+    except KeyError:
+        next_page_token = False
+
+    while next_page_token:
+        response = service.search().list(
+            q=query,
+            part='snippet',
+            type=search_type,
+            maxResults=50,
+            pageToken=next_page_token
+        ).execute()
+
+        items = response['items']
+        for item in items:
+            kind = item['id']['kind']
+            if kind == 'youtube#channel':
+                item_id = item['id']['channelId']
+            elif kind == 'youtube#video':
+                item_id = item['id']['videoId']
+            elif kind == 'youtube#playlist':
+                item_id = item['id']['playlistId']
+            else:
+                # Raise KeyError if no item kind found
+                raise KeyError(kind)
+
+            if item_id not in ids:
+                ids.append(item_id)  # Appends IDs' to the list
+
     if len(search_type) == 22:
         print(f'{len(ids)} items found in the search')
     else:
-
+        print(f'Total {search_type.capitalize()}s found: {len(ids)}')
 
     return ids
