@@ -144,15 +144,32 @@ class YouTube:
         # Creates a CSV file in the current working directory
         helper_funcs.create_csv(videos_data, filename)
 
-    def search_channel_by_keyword(self,
-                                  search_query: str):
+    def extract_channels_by_keyword(self,
+                                    search_query: str,
+                                    filename: None):
+        """
+        Extract YouTube channels using keyword and return data of the channels in .csv file
+
+        Args:
+            search_query: Your search keyword
+            filename: File name to be saved with
+
+        Returns:
+            .csv file of all channels related to keyword
+        """
+
+        if filename is None:
+            filename = search_query.strip().lower()
 
         # Grabs channels id
         channel_ids = search.search_by_keyword(self.service, search_query, 'channel')
+
+        # Request & extract channels' data
         channel_data = channel.request_channels_data(self.service, channel_ids)
+        channel_data = channel.extract_channel_data(channel_data)
 
-
-
+        # Creates a .csv file in the /data of current working directory
+        helper_funcs.create_csv(channel_data, filename)
 
     def request_channels_data(self) -> list:
         channels_data = []  # Holds channels data
@@ -644,4 +661,4 @@ if __name__ == '__main__':
     #     'tkinter_tutorials'
     # )
 
-    yt.search_channel_by_keyword('youtube data api v3')
+    yt.search_channel_by_keyword('Haloperidol')
