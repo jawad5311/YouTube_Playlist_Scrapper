@@ -149,8 +149,8 @@ class YouTube:
 
         # Grabs channels id
         channel_ids = search.search_by_keyword(self.service, search_query, 'channel')
+        channel_data = channel.request_channels_data(self.service, channel_ids)
 
-        print(len(channel_ids))
 
 
 
