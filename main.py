@@ -12,7 +12,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-from helper_functions import channel, video, playlist, helper_funcs
+from helper_functions import channel, video, playlist, search, helper_funcs
 
 
 # Creating YouTube class to communicate with YouTube API
@@ -144,6 +144,11 @@ class YouTube:
         # Creates a CSV file in the current working directory
         helper_funcs.create_csv(videos_data, filename)
 
+    def search_channel_by_keyword(self,
+                                  search_query: str):
+
+        # Grabs channels id
+        channel_ids = search.search_by_keyword(self.service, search_query, 'channel')
 
 
 
