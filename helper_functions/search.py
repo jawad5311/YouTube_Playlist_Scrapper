@@ -75,9 +75,14 @@ def search_by_keyword(service,
             if item_id not in ids:
                 ids.append(item_id)  # Appends IDs' to the list
 
+        try:
+            next_page_token = response['nextPageToken']
+        except KeyError:
+            next_page_token = False
+
     if len(search_type) == 22:
         print(f'{len(ids)} items found in the search')
     else:
-        print(f'Total {search_type.capitalize()}s found: {len(ids)}')
+        print(f'Total {search_type.capitalize()}\'s found: {len(ids)}')
 
     return ids

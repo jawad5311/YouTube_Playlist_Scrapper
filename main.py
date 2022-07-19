@@ -150,81 +150,9 @@ class YouTube:
         # Grabs channels id
         channel_ids = search.search_by_keyword(self.service, search_query, 'channel')
 
+        print(len(channel_ids))
 
 
-    def get_channels_id(self, query: str, no_of_channels: int = 300) -> None:
-        """
-            Extract channels id's based on search query and add them to
-            `self.ids`
-
-            Parameters:
-                query: str
-                    Search query for which the request is to be made
-                no_of_channels: int (default : 300)
-                    No of channels to scrapped. No. of channel id's you
-                    will get back might be less as same channel id's are
-                    filtered out.
-
-            Returns: None
-                Add items to `self.ids` list
-
-        """
-
-        print(f'Total Channels found: {len(self.channel_ids)}')
-        prev_length = len(self.channel_ids)
-
-        search_response = []  # Holds search response
-
-        # Request search
-        response = self.service.search().list(
-            part='snippet',
-            q=query,
-            maxResults=50
-        ).execute()
-
-        search_response.extend(response['items'])  # Add returned items to list
-        next_page_token = response['nextPageToken']  # Grabs nextpage token
-        # print(f'Next Page token: {next_page_token}')
-
-        # Display current page that is being scrapped on terminal
-        current_page = 1
-        print(f'Current Page: {current_page}')
-        channel_range = 0
-
-        # Request search for 5 times
-        while next_page_token:
-            response = self.service.search().list(
-                part='snippet',
-                q=query,
-                maxResults=50,
-                pageToken=next_page_token
-            ).execute()
-
-            search_response.extend(response['items'])
-            try:
-                next_page_token = response['nextPageToken']
-            except KeyError:
-                next_page_token = False
-            # print(f'Next Page token: {next_page_token}')
-            channel_range += 50
-            if current_page % 2 == 0:
-                print(f'Current Page: {current_page}')
-            if channel_range > no_of_channels:
-                break
-
-        channels_ids = []  # Holds channels id's
-
-        # Loop through each item in search response and grabs channel id
-        for item in search_response:
-            channel_id = item['snippet']['channelId']  # Channel id
-            # Add channel to the list if it is not already added
-            if channel_id not in self.channel_ids:
-                self.channel_ids.append(channel_id)
-
-        print()
-        print(f'Unique channels in this run: {len(self.channel_ids) - prev_length}')
-        print()
-        print(f'Total Channels found: {len(self.channel_ids)}')
 
     def request_channels_data(self) -> list:
         channels_data = []  # Holds channels data
@@ -711,7 +639,9 @@ if __name__ == '__main__':
 
     # yt.extract_channel_videos('UCwKKyoOAhd7EE9pALtXoz_A', 'test_data')
 
-    yt.extract_videos_from_playlist(
-        'https://www.youtube.com/playlist?list=PLs3IFJPw3G9KL3huzPS7g-0PCbS7Auc7I',
-        'tkinter_tutorials'
-    )
+    # yt.extract_videos_from_playlist(
+    #     'https://www.youtube.com/playlist?list=PLs3IFJPw3G9KL3huzPS7g-0PCbS7Auc7I',
+    #     'tkinter_tutorials'
+    # )
+
+    yt.search_channel_by_keyword('youtube data api v3')
