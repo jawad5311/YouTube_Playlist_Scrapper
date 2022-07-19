@@ -38,9 +38,6 @@ def get_videos_id(
         except KeyError:
             next_page_token = ''
 
-        # current_page = 1
-
-        # Retrieve data while the next page is available
         while next_page_token:
             request = service.playlistItems().list(
                 part='snippet',
@@ -57,11 +54,6 @@ def get_videos_id(
                 video_id = item['snippet']['resourceId']['videoId']
                 video_ids.append(video_id)
 
-            # print(f'Current Page: {current_page}')  # prints current page
-            # current_page += 1
-
-            # Add items to playlist_items that are retrieved from next page
-            # playlist_items.extend(response['items'])
             next_page_token = response.get('nextPageToken')
 
         print(f'Total Videos found: {len(video_ids)}')
@@ -74,9 +66,6 @@ def get_videos_id(
             pass
         else:
             raise
-
-    # videos_id = [item['snippet']['resourceId']['videoId'] for item in
-    #              playlist_items]  # Holds all available videos id's
 
     return video_ids
 
