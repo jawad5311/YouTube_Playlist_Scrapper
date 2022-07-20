@@ -121,7 +121,7 @@ class YouTube:
         videos_ids = playlist.get_videos_id(self.service, channel_uploads_id)
 
         # Retrieve Videos Data
-        videos_data = video.get_videos_data(self.service, videos_ids)
+        videos_data = video.extract_videos_data(self.service, videos_ids)
 
         # Creates a CSV file in the current working directory
         helper_funcs.create_csv(videos_data, filename)
@@ -147,14 +147,14 @@ class YouTube:
         videos_ids = playlist.get_videos_id(self.service, playlist_id)
 
         # Retrieve videos data
-        videos_data = video.get_videos_data(self.service, videos_ids)
+        videos_data = video.extract_videos_data(self.service, videos_ids)
 
         # Creates a CSV file in the current working directory
         helper_funcs.create_csv(videos_data, filename)
 
     def extract_channels_by_keyword(self,
                                     search_query: str,
-                                    filename: None):
+                                    filename: str = ''):
         """
         Extract YouTube channels using keyword and return data of the channels in .csv file
 
@@ -166,7 +166,7 @@ class YouTube:
             .csv file of all channels related to keyword
         """
 
-        if filename is None:
+        if not filename:
             filename = search_query.strip().lower()
 
         # Grabs channels id
@@ -179,31 +179,31 @@ class YouTube:
         # Creates a .csv file in the /data of current working directory
         helper_funcs.create_csv(channel_data, filename)
 
+    def extract_videos_by_keyword(self,
+                                  search_query: str,
+                                  filename: str = ''):
+        """
+        Extract YouTube videos data by keyword and creates a .csv file
+        Args:
+            search_query: Your search keyword
+            filename: Filename to be saved with
 
+        Returns:
+            .csv file at /data in the current working directory
+        """
 
-    def request_channels_data(self) -> list:
-        channels_data = []  # Holds channels data
-        batch_size = 50  # No. channels to request data in single request
+        if not filename:
+            filename = search_query.strip().lower()
 
-        # Creates id batches to request data and store response in list
-        for batch_num in range(0, len(self.channel_ids), batch_size):
-            # Create batches
-            batch = self.channel_ids[batch_num: batch_num + batch_size]
-            batch = ','.join(batch)  # Join id's with comma
+        # Grabs videos id's
+        videos_ids = search.search_by_keyword(self.service, search_query, 'video')
 
-            # Request channel data using channel id
-            channel_response = self.service.channels().list(
-                part='snippet,statistics,contentDetails,brandingSettings',
-                id=batch,
-                maxResults=batch_size,
-            ).execute()
+        # Videos data
+        videos_data = video.extract_videos_data(self.service, videos_ids)
 
-            channel_items = channel_response['items']
-            channels_data.extend(channel_items)
+        # Create .csv file at /data of current working directory
+        helper_funcs.create_csv(videos_data, filename)
 
-        print()
-        print(f'Total channels data requested: {len(channels_data)}')
-        return channels_data
 
     @staticmethod
     def filter_channels(data: list,
@@ -671,4 +671,6 @@ if __name__ == '__main__':
     #     'tkinter_tutorials'
     # )
 
-    yt.search_channel_by_keyword('Haloperidol')
+    # yt.extract_channels_by_keyword('python')
+
+    yt.extract_videos_by_keyword('youtube data api v3')

@@ -3,8 +3,8 @@ import pandas as pd
 from helper_functions import helper_funcs
 
 
-def get_videos_data(service,
-                    videos_id: list) -> pd.DataFrame:
+def extract_videos_data(service,
+                        videos_id: list) -> pd.DataFrame:
     """
     Args:
         service: YouTube API service instance
@@ -69,6 +69,8 @@ def get_videos_data(service,
                 'dislikes': dislikes,
                 'comments': comments
             })
+
+    print(f'Total videos data extracted: {len(videos_data)}')
 
     return pd.DataFrame(videos_data)
 
