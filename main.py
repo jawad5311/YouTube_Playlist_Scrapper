@@ -1,18 +1,26 @@
-import pandas as pd
+# Built-in Modules import
+import os
+from datetime import datetime, timedelta
 
+# Installed Modules import
+import pandas as pd
+import dotenv
+
+# Google API imports
 from googleapiclient.discovery import build
 import google_auth_oauthlib.flow
-from datetime import datetime, timedelta
+
+# Selenium imports
 # from selenium import webdriver
 # from selenium.webdriver.chrome.options import Options
 # from selenium.common.exceptions import NoSuchElementException
 
-import os
-import dotenv
 
-dotenv.load_dotenv()
-
+# Project files import
 from helper_functions import channel, video, playlist, search, helper_funcs
+
+
+dotenv.load_dotenv()  # Loads .env file
 
 
 # Creating YouTube class to communicate with YouTube API
@@ -170,6 +178,8 @@ class YouTube:
 
         # Creates a .csv file in the /data of current working directory
         helper_funcs.create_csv(channel_data, filename)
+
+
 
     def request_channels_data(self) -> list:
         channels_data = []  # Holds channels data
