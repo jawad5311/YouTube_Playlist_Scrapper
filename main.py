@@ -154,13 +154,24 @@ class YouTube:
 
     def extract_channels_by_keyword(self,
                                     search_query: str,
-                                    filename: str = ''):
+                                    filename: str = '',
+                                    filter: bool = False,
+                                    subs_min: int = 0,
+                                    subs_max: int = 1000000000,
+                                    vid_count: int = 0,
+                                    last_activity: int = 3650):
         """
-        Extract YouTube channels using keyword and return data of the channels in .csv file
+        Search for channels by keyword and return data in .csv file
 
         Args:
             search_query: Your search keyword
             filename: File name to be saved with
+            filter: Filter channels based on criteria.
+                If True, set values for (subs_min, subs_max, min_vid_count, last_activity)
+            subs_min: Minimum number of subscribers a channel must have
+            subs_max: Maximum number of subscribers a channel have
+            vid_count: Minimum number of videos a channel must have
+            last_activity: Last activity by channel in no. of days
 
         Returns:
             .csv file of all channels related to keyword
@@ -174,10 +185,17 @@ class YouTube:
 
         # Request & extract channels' data
         channel_data = channel.request_channels_data(self.service, channel_ids)
+
+        if filter:
+            channel.filter_channels(channel_data, subs_min, subs_max, vid_count, last_activity)
         channel_data = channel.extract_channel_data(channel_data)
 
         # Creates a .csv file in the /data of current working directory
         helper_funcs.create_csv(channel_data, filename)
+
+    def extract_channels_by_criteria(self):
+
+        return
 
     def extract_videos_by_keyword(self,
                                   search_query: str,
@@ -204,49 +222,6 @@ class YouTube:
         # Create .csv file at /data of current working directory
         helper_funcs.create_csv(videos_data, filename)
 
-
-    @staticmethod
-    def filter_channels(data: list,
-                        subs_min: int = 1000,
-                        subs_max: int = 1000000,
-                        min_vid_count: int = 5) -> list:
-        """
-            Filter channels based on no. of videos and subs count.
-
-            Parameters:
-                data: list,
-                    containing channels data
-                subs_min: int
-                    Minimum number of subscribers a channel must have
-                subs_max: int
-                    Maximum number of subscribers a channel must have
-                min_vid_count: int
-                    Minimum number of videos a channel must have
-
-            Returns:
-                List containing filtered channels
-        """
-        filtered_channels = []
-
-        # Filter channels and append them to list
-        for item in data:
-            subs_hidden = item['statistics']['hiddenSubscriberCount']
-            # If subs are hidden then add subscribers count = 0
-            if subs_hidden:
-                item['statistics']['subscriberCount'] = '0'
-            vid_count = item['statistics']['videoCount']
-            if int(vid_count) > min_vid_count:
-                subs = item['statistics']['subscriberCount']
-                if subs == '0':
-                    filtered_channels.append(item)
-                if subs_min < int(subs) < subs_max:
-                    filtered_channels.append(item)
-                # else:
-                #     # item['statistics']['subscriberCount'] = '0'
-                #     filtered_channels.append(item)
-
-        print(f'Filtered Channels: {len(filtered_channels)}')
-        return filtered_channels  # Returns list of filtered channels
 
     def filter_active_channels(self, data: list, activity: int = 21) -> list:
         """
