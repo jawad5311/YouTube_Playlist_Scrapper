@@ -155,7 +155,7 @@ class YouTube:
     def extract_channels_by_keyword(self,
                                     search_query: str,
                                     filename: str = '',
-                                    filter: bool = False,
+                                    filter_channels: bool = False,
                                     subs_min: int = 0,
                                     subs_max: int = 1000000000,
                                     vid_count: int = 0,
@@ -166,7 +166,7 @@ class YouTube:
         Args:
             search_query: Your search keyword
             filename: File name to be saved with
-            filter: Filter channels based on criteria.
+            filter_channels: Filter channels based on criteria.
                 If True, set values for (subs_min, subs_max, min_vid_count, last_activity)
             subs_min: Minimum number of subscribers a channel must have
             subs_max: Maximum number of subscribers a channel have
@@ -186,16 +186,17 @@ class YouTube:
         # Request & extract channels' data
         channel_data = channel.request_channels_data(self.service, channel_ids)
 
-        if filter:
-            channel.filter_channels(channel_data, subs_min, subs_max, vid_count, last_activity)
+        if filter_channels:
+            channel.filter_channels_by_criteria(channel_data, subs_min, subs_max, vid_count)
+            
         channel_data = channel.extract_channel_data(channel_data)
 
         # Creates a .csv file in the /data of current working directory
         helper_funcs.create_csv(channel_data, filename)
 
-    def extract_channels_by_criteria(self):
-
-        return
+    # def extract_channels_by_criteria(self):
+    #
+    #     return
 
     def extract_videos_by_keyword(self,
                                   search_query: str,

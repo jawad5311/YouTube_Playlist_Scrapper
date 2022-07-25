@@ -112,11 +112,10 @@ def extract_channel_data(data: list) -> pd.DataFrame:
     return pd.DataFrame(channel_info)
 
 
-def filter_channels(data: list,
-                    subs_min: int = 0,
-                    subs_max: int = 1000000000,
-                    min_vid_count: int = 0,
-                    last_activity: int = 3650) -> list:
+def filter_channels_by_criteria(data: list,
+                                subs_min: int = 0,
+                                subs_max: int = 1000000000,
+                                min_vid_count: int = 0) -> list:
     """
         Filter channels based on no. of videos and subs count.
 
@@ -137,19 +136,22 @@ def filter_channels(data: list,
 
     # Filter channels and append them to list
     for item in data:
-        subs_hidden = item['statistics']['hiddenSubscriberCount']
-        vid_count = item['statistics']['videoCount']
 
-        # If subs are hidden then add subscribers count = 0
+        # Check if subs are hidden and if hidden then add sub count '0'
+        subs_hidden = item['statistics']['hiddenSubscriberCount']
         if subs_hidden:
-            item['statistics']['subscriberCount'] = 'hidden'
+            item['statistics']['subscriberCount'] = '0'
+
+        # Get channel's uploaded videos count
+        vid_count = item['statistics']['videoCount']
         if int(vid_count) > min_vid_count:
             subs = item['statistics']['subscriberCount']
-            if subs == '0':
-                filtered_channels.append(item)
-            if subs_min < int(subs) < subs_max:
-                filtered_channels.append(item)
+            if item not in filtered_channels:
+                if subs_hidden or subs_min < int(subs) < subs_max:
+                    filtered_channels.append(item)
 
-    print(f'Filtered Channels: {len(filtered_channels)}')
+    print(f'Channels Dropped: {len(data) - len(filtered_channels)}')
+    print(f'Channels Filtered: {len(filtered_channels)}')
+
     return filtered_channels  # Returns list of filtered channels
 
