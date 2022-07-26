@@ -189,16 +189,12 @@ class YouTube:
         if filter_channels:
             channel_data = channel.filter_channels_by_criteria(channel_data, subs_min, subs_max, vid_count)
             if last_activity:
-                pass
+                channel_data = channel.filter_active_channels(self.service, channel_data, last_activity)
             
         channel_data = channel.extract_channel_data(channel_data)
 
         # Creates a .csv file in the /data of current working directory
         helper_funcs.create_csv(channel_data, filename)
-
-    # def extract_channels_by_criteria(self):
-    #
-    #     return
 
     def extract_videos_by_keyword(self,
                                   search_query: str,
@@ -224,62 +220,6 @@ class YouTube:
 
         # Create .csv file at /data of current working directory
         helper_funcs.create_csv(videos_data, filename)
-
-    @staticmethod
-    def extract_channel_data(data: list) -> pd.DataFrame:
-        """
-        Extract channel information from the data
-
-        Parameters:
-            data: list
-                Data containing channels raw information
-
-        Returns:
-            Pandas DataFrame
-        """
-        channel_info = []
-        for item in data:
-            channel_title = item['snippet']['title']  # Channel Title
-            channel_date = item['snippet']['publishedAt'][:10]  # Channel created date
-            # channel_date = datetime.strptime(channel_date, '%Y-%m-%d')
-            try:
-                country = item['snippet']['country']  # Creator country
-            except KeyError:
-                country = 'NaN'
-            channel_id = item['id']  # Channel ID
-            channel_url = f'www.youtube.com/channel/{channel_id}'  # Channel URL
-            try:
-                # Custom URL of channel if available
-                custom_url = item['snippet']['customUrl']
-                custom_url = f'www.youtube.com/c/{custom_url}'
-            except KeyError:
-                custom_url = 'NaN'
-
-            try:
-                subs = item['statistics']['subscriberCount']  # No. of subscribers]
-            except KeyError:
-                item['statistics']['subscriberCount'] = '0'
-                subs = item['statistics']['subscriberCount']
-
-            vid_count = item['statistics']['videoCount']  # Total no. videos
-            view_count = item['statistics']['viewCount']  # Total no. views
-
-            # Append each info as a dict item into the list
-            channel_info.append({
-                'custom_URL': custom_url,
-                'channel_URL': channel_url,
-                'Title': channel_title,
-                'Subs': subs,
-                'Country': country,
-                'email': '',
-                'Channel_created_on': channel_date,
-                'Total_Videos': vid_count,
-                'Total_Views': view_count,
-            })
-
-        print(f'Pandas DataFrame created successfully!')
-
-        return pd.DataFrame(channel_info)
 
     def scrap_emails(self, data: pd.DataFrame):
 
@@ -597,6 +537,11 @@ if __name__ == '__main__':
     #     'tkinter_tutorials'
     # )
 
-    # yt.extract_channels_by_keyword('python')
+    yt.extract_channels_by_keyword('python',
+                                   filter_channels=True,
+                                   subs_min=50000,
+                                   subs_max=100000,
+                                   vid_count=30,
+                                   last_activity=30)
 
-    yt.extract_videos_by_keyword('youtube data api v3')
+    # yt.extract_videos_by_keyword('youtube data api v3')

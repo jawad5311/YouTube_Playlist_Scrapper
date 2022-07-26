@@ -171,9 +171,8 @@ def filter_active_channels(service, data: list, activity: int = 21) -> list:
 
     active_channels = []  # Holds active channels
 
-    # Current local time
-    current_time = dt.datetime.now().strftime('%Y-%m-%d')
-    current_time = dt.datetime.strptime(current_time, '%Y-%m-%d')
+    # Activity time from today
+    activity_time = dt.datetime.now() - dt.timedelta(days=activity)
 
     for item in data:
         uploads = item['contentDetails']['relatedPlaylists']['uploads']
@@ -186,13 +185,13 @@ def filter_active_channels(service, data: list, activity: int = 21) -> list:
         # Grabs recent published video time
         vid_time = response['items'][0]['contentDetails']['videoPublishedAt'][:10]
         vid_time = dt.datetime.strptime(vid_time, '%Y-%m-%d')
-        # Increment recent video time by no. of days activity
-        vid_new_time = vid_time + timedelta(days=activity)
 
-        if vid_new_time >= current_time:
+        if vid_time >= activity_time:
             active_channels.append(item)
 
+    print(f'In-active Channels Dropped: {len(data) - len(active_channels)}')
     print(f'Active Channels: {len(active_channels)}')
+
     return active_channels
 
 
