@@ -159,7 +159,7 @@ class YouTube:
                                     subs_min: int = 0,
                                     subs_max: int = 1000000000,
                                     vid_count: int = 0,
-                                    last_activity: int = 3650):
+                                    last_activity: int = 0):
         """
         Search for channels by keyword and return data in .csv file
 
@@ -187,7 +187,9 @@ class YouTube:
         channel_data = channel.request_channels_data(self.service, channel_ids)
 
         if filter_channels:
-            channel.filter_channels_by_criteria(channel_data, subs_min, subs_max, vid_count)
+            channel_data = channel.filter_channels_by_criteria(channel_data, subs_min, subs_max, vid_count)
+            if last_activity:
+                pass
             
         channel_data = channel.extract_channel_data(channel_data)
 
@@ -222,58 +224,6 @@ class YouTube:
 
         # Create .csv file at /data of current working directory
         helper_funcs.create_csv(videos_data, filename)
-
-
-    def filter_active_channels(self, data: list, activity: int = 21) -> list:
-        """
-            Filter channels based on their recent activity
-
-            Parameters:
-                data: list
-                    List of channels retrieved from filter_channels()
-                activity: int
-                    Last activity of channel in no. of days
-
-            Returns:
-                list -> List containing active channels
-        """
-        active_channels = []  # Holds active channels
-        current_item = 1
-
-        # Go through each item in data and retrieve playlist id
-        # Send request and retrieve playlist information
-        # Fetch last uploaded video and retrieve its published date
-        # See if the video is uploaded within activity days
-        for item in data:
-            uploads = item['contentDetails']['relatedPlaylists']['uploads']
-            response = self.service.playlistItems().list(
-                part='contentDetails',
-                playlistId=uploads,
-                maxResults=1
-            ).execute()
-
-            # Grabs recent published video time
-            vid_time = response['items'][0]['contentDetails']['videoPublishedAt'][:10]
-            vid_time = datetime.strptime(vid_time, '%Y-%m-%d')
-            # Increment recent video time by no. of days activity
-            vid_new_time = vid_time + timedelta(days=activity)
-
-            # Current local time
-            current_time = datetime.now().strftime('%Y-%m-%d')
-            current_time = datetime.strptime(current_time, '%Y-%m-%d')
-
-            # Displays no. of channels that are being filtered
-            current_item += 1
-            if current_item % 50 == 0:
-                print(f'No. of active channels filtered: {current_item}')
-
-            # If recent uploaded video is within the given timeframe
-            # then append this video to the list
-            if vid_new_time >= current_time:
-                active_channels.append(item)
-
-        print(f'Active Channels: {len(active_channels)}')
-        return active_channels
 
     @staticmethod
     def extract_channel_data(data: list) -> pd.DataFrame:

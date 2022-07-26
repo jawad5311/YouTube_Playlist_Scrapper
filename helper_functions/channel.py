@@ -155,3 +155,44 @@ def filter_channels_by_criteria(data: list,
 
     return filtered_channels  # Returns list of filtered channels
 
+
+def filter_active_channels(service, data: list, activity: int = 21) -> list:
+    """
+        Filter channels based on their recent activity in no. of days
+
+        Parameters:
+            service: YouTube Service Instance
+            data: List of channels data retrieved from YouTube API response
+            activity: int -> Last activity of channel in no. of days
+
+        Returns:
+            List containing active channels
+    """
+
+    active_channels = []  # Holds active channels
+
+    # Current local time
+    current_time = dt.datetime.now().strftime('%Y-%m-%d')
+    current_time = dt.datetime.strptime(current_time, '%Y-%m-%d')
+
+    for item in data:
+        uploads = item['contentDetails']['relatedPlaylists']['uploads']
+        response = service.playlistItems().list(
+            part='contentDetails',
+            playlistId=uploads,
+            maxResults=1
+        ).execute()
+
+        # Grabs recent published video time
+        vid_time = response['items'][0]['contentDetails']['videoPublishedAt'][:10]
+        vid_time = dt.datetime.strptime(vid_time, '%Y-%m-%d')
+        # Increment recent video time by no. of days activity
+        vid_new_time = vid_time + timedelta(days=activity)
+
+        if vid_new_time >= current_time:
+            active_channels.append(item)
+
+    print(f'Active Channels: {len(active_channels)}')
+    return active_channels
+
+
