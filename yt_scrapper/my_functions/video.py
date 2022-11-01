@@ -1,14 +1,13 @@
-
 import pandas as pd
 from .funcs import convert_duration_to_seconds
 
 
 def extract_videos_data(service,
-                        videos_id: list) -> pd.DataFrame:
+                        videos_ids: list) -> pd.DataFrame:
     """
     Args:
         service: YouTube API service instance
-        videos_id: list of videos ID's
+        videos_ids: list of videos ID's
 
     Returns:
         Pandas dataframe
@@ -18,9 +17,9 @@ def extract_videos_data(service,
 
     videos_data = []  # Use to hold videos info
 
-    for batch_range in range(0, len(videos_id), 50):
+    for batch_range in range(0, len(videos_ids), 50):
         # Creates videos batches of 50
-        videos_batch = videos_id[batch_range:batch_range + 50]
+        videos_batch = videos_ids[batch_range:batch_range + 50]
 
         response = service.videos().list(
             id=videos_batch,
@@ -74,3 +73,33 @@ def extract_videos_data(service,
 
     return pd.DataFrame(videos_data)
 
+
+def extract_videos_data_for_trello(service, videos_ids):
+    videos_data = []
+    for batch_range in range(0, len(videos_ids), 50):
+        # Creates videos batches of 50
+        videos_batch = videos_ids[batch_range:batch_range + 50]
+
+        response = service.videos().list(
+            id=videos_batch,
+            part='contentDetails,snippet',
+            maxResults=50
+        ).execute()
+
+        items = response['items']  # Holds videos data from response
+
+        for item in items:
+            title = item['snippet']['title']
+            date = item['snippet']['publishedAt'][:10]
+
+            video_url = f'https://www.youtube.com/watch?v={vid_id}'
+
+            duration = item['contentDetails']['duration']
+            duration = convert_duration_to_seconds(duration)
+            duration = duration // 60
+
+            videos_data.append(
+                (title, date, video_url, duration)
+            )
+
+    return videos_data

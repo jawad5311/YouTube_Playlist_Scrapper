@@ -355,7 +355,7 @@ class YouTube:
                             self.filtered_channels.append(channel)
 
     def sort_playlist_items(self,
-                            playlist_Id,
+                            playlist_id,
                             sort_by: str,
                             videos_to_sort: int = 5,
                             ascending: bool = False):
@@ -368,7 +368,7 @@ class YouTube:
                 f"{', '.join(sort_by_params)}"
             )
 
-        item_id_in_playlist, playlist_items = self.get_playlist_items(playlist_Id,
+        item_id_in_playlist, playlist_items = self.get_playlist_items(playlist_id,
                                                                       for_sort_by=True)
         videos_data = self.get_videos_data(playlist_items)
 
@@ -520,21 +520,5 @@ if __name__ == '__main__':
     API_KEY = os.environ.get('API_KEY')
 
     yt = YouTube(API_KEY)
-    # yt.sort_playlist_items('PLyR_eqaLz2hmBPeDYO3pyXaqexCIV-PGp',
-    #                        'likes')
 
-    # yt.extract_channel_videos('UCwKKyoOAhd7EE9pALtXoz_A', 'test_data')
-
-    # yt.extract_videos_from_playlist(
-    #     'https://www.youtube.com/playlist?list=PLs3IFJPw3G9KL3huzPS7g-0PCbS7Auc7I',
-    #     'tkinter_tutorials'
-    # )
-
-    yt.extract_channels_by_keyword('python',
-                                   filter_channels=True,
-                                   subs_min=50000,
-                                   subs_max=100000,
-                                   vid_count=30,
-                                   last_activity=30)
-
-    # yt.extract_videos_by_keyword('youtube data api v3')
+    print(channel.get_channel_id('https://www.youtube.com/channel/UCG0mIrUXrqETHcrc-KrAHJQ'))

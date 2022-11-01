@@ -1,6 +1,10 @@
 
+import requests
+
 import pandas as pd
 import datetime as dt
+
+from bs4 import BeautifulSoup
 
 
 def get_channel_uploads_id(service, channel_id: str) -> str:
@@ -193,5 +197,20 @@ def filter_active_channels(service, data: list, activity: int = 21) -> list:
     print(f'Active Channels: {len(active_channels)}')
 
     return active_channels
+
+
+def get_channel_id(channel_link: str) -> str:
+    """
+    Returns YouTube channel id from the channel link.
+
+    Args:
+        channel_link: YouTube channel url
+
+    Returns:
+        str: Channel ID
+    """
+    req = requests.get(channel_link)
+    soup = BeautifulSoup(req.text, 'html.parser')
+    return soup.find_all('meta', itemprop='channelId')[0]['content']
 
 
