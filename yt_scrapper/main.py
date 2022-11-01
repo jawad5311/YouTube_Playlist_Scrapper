@@ -17,8 +17,7 @@ import google_auth_oauthlib.flow
 
 
 # Project files import
-from helper_functions import channel, video, playlist, search, helper_funcs
-
+from my_functions import channel, video, playlist, search, funcs
 
 dotenv.load_dotenv()  # Loads .env file
 
@@ -66,12 +65,6 @@ class YouTube:
 
         client_secrets_file = "secret_files/secret_key.json"
         self.client_secrets_file = client_secrets_file
-
-        channel_ids = []
-        self.channel_ids = channel_ids
-
-        filtered_channels = []
-        self.filtered_channels = filtered_channels
 
     def construct_service(self):
         """
@@ -124,7 +117,7 @@ class YouTube:
         videos_data = video.extract_videos_data(self.service, videos_ids)
 
         # Creates a CSV file in the current working directory
-        helper_funcs.create_csv(videos_data, filename)
+        funcs.create_csv(videos_data, filename)
 
     def extract_videos_from_playlist(self,
                                      youtube_playlist: str,
@@ -141,7 +134,7 @@ class YouTube:
         """
 
         # Grabs playlist id
-        playlist_id = helper_funcs.extract_playlist_id(youtube_playlist)
+        playlist_id = funcs.extract_playlist_id(youtube_playlist)
 
         # Grabs videos ID's from playlist
         videos_ids = playlist.get_videos_id(self.service, playlist_id)
@@ -150,7 +143,7 @@ class YouTube:
         videos_data = video.extract_videos_data(self.service, videos_ids)
 
         # Creates a CSV file in the current working directory
-        helper_funcs.create_csv(videos_data, filename)
+        funcs.create_csv(videos_data, filename)
 
     def extract_channels_by_keyword(self,
                                     search_query: str,
@@ -190,11 +183,11 @@ class YouTube:
             channel_data = channel.filter_channels_by_criteria(channel_data, subs_min, subs_max, vid_count)
             if last_activity:
                 channel_data = channel.filter_active_channels(self.service, channel_data, last_activity)
-            
+
         channel_data = channel.extract_channel_data(channel_data)
 
         # Creates a .csv file in the /data of current working directory
-        helper_funcs.create_csv(channel_data, filename)
+        funcs.create_csv(channel_data, filename)
 
     def extract_videos_by_keyword(self,
                                   search_query: str,
@@ -219,7 +212,7 @@ class YouTube:
         videos_data = video.extract_videos_data(self.service, videos_ids)
 
         # Create .csv file at /data of current working directory
-        helper_funcs.create_csv(videos_data, filename)
+        funcs.create_csv(videos_data, filename)
 
     def scrap_emails(self, data: pd.DataFrame):
 

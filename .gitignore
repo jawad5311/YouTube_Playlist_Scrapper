@@ -1,7 +1,7 @@
 token.txt
 secret_key.json
 *.csv
-code_testing.ipynb
+*.ipynb
 chrome_driver/
 *.xlsx
 secret_files/

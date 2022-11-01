@@ -36,7 +36,9 @@ def create_csv(data: pd.DataFrame, filename: str) -> None:
     """
     print(f'Creating file: {filename}.csv')
 
+    os.chdir('..')
     path = f'{os.getcwd()}/data'
+
     if not os.path.exists(path):
         os.makedirs(path)
 

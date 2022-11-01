@@ -1,6 +1,6 @@
 
 import pandas as pd
-from helper_functions import helper_funcs
+from .funcs import convert_duration_to_seconds
 
 
 def extract_videos_data(service,
@@ -39,7 +39,7 @@ def extract_videos_data(service,
             video_url = f'https://www.youtube.com/watch?v={vid_id}'
 
             duration = item['contentDetails']['duration']
-            duration = helper_funcs.convert_duration_to_seconds(duration)
+            duration = convert_duration_to_seconds(duration)
 
             try:
                 likes = item['statistics']['likeCount']
