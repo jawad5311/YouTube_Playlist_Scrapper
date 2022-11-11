@@ -6,7 +6,18 @@ import datetime as dt
 
 from bs4 import BeautifulSoup
 
-from .grab import _grab_playlist_id_from_contentDetails
+from .grab import _grab_channel_playlist_id_from_contentDetails
+from .grab import _grab_channel_title_from_snippet
+from .grab import _grab_channel_published_date_from_snippet
+from .grab import _grab_channel_country_from_snippet
+from .grab import _grab_channel_id
+from .grab import _grab_channel_url
+from .grab import _grab_channel_custom_url_from_snippet
+from .grab import _grab_channel_subs_count_from_statistics
+from .grab import _grab_channel_video_count_from_statistics
+from .grab import _grab_channel_view_count_from_statistics
+from .grab import _channel_subs_hidden
+from .grab import _grab_video_duration_from_contentDetails
 
 
 def get_channel_uploads_id(service, channel_id: str) -> str:
@@ -28,8 +39,7 @@ def get_channel_uploads_id(service, channel_id: str) -> str:
     response = request.execute()  # Send request and receive response
 
     # Extract playlist_id from the received response
-    playlist_id = _grab_playlist_id_from_contentDetails(response['items'][0])
-    # playlist_id = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+    playlist_id = _grab_channel_playlist_id_from_contentDetails(response['items'][0])
 
     return playlist_id
 
@@ -78,30 +88,16 @@ def extract_channel_data(data: list) -> pd.DataFrame:
 
     channel_info = []  # Holds channel info
     for item in data:
-        channel_title = item['snippet']['title']  # Channel Title
-        channel_date = item['snippet']['publishedAt'][:10]  # Channel created date
+        channel_title = _grab_channel_title_from_snippet(item)  # Channel Title
+        channel_date = _grab_channel_published_date_from_snippet(item)  # Channel created date
         channel_date = dt.datetime.strptime(channel_date, '%Y-%m-%d')
-        try:
-            country = item['snippet']['country']  # Creator country
-        except KeyError:
-            country = 'NaN'
-        channel_id = item['id']  # Channel ID
-        channel_url = f'www.youtube.com/channel/{channel_id}'  # Channel URL
-        try:
-            # Custom URL of channel if available
-            custom_url = item['snippet']['customUrl']
-            custom_url = f'www.youtube.com/c/{custom_url}'
-        except KeyError:
-            custom_url = 'NaN'
-
-        try:
-            subs = item['statistics']['subscriberCount']  # No. of subscribers]
-        except KeyError:
-            item['statistics']['subscriberCount'] = '0'
-            subs = item['statistics']['subscriberCount']
-
-        vid_count = item['statistics']['videoCount']  # Total no. videos
-        view_count = item['statistics']['viewCount']  # Total no. views
+        country = _grab_channel_country_from_snippet(item)  # Channel's Country
+        channel_id = _grab_channel_id(item)  # Channel ID
+        channel_url = _grab_channel_url(item)  # Channel URL
+        custom_url = _grab_channel_custom_url_from_snippet(item)
+        subs = _grab_channel_subs_count_from_statistics(item)
+        vid_count = _grab_channel_video_count_from_statistics(item)  # Total no. videos
+        view_count = _grab_channel_view_count_from_statistics(item)  # Total no. views
 
         # Append each info as a dict item into the list
         channel_info.append({
@@ -145,14 +141,15 @@ def filter_channels_by_criteria(data: list,
     for item in data:
 
         # Check if subs are hidden and if hidden then add sub count '0'
-        subs_hidden = item['statistics']['hiddenSubscriberCount']
+        subs_hidden = _channel_subs_hidden(item)
         if subs_hidden:
+            # set the channel subs count to 0
             item['statistics']['subscriberCount'] = '0'
 
         # Get channel's uploaded videos count
-        vid_count = item['statistics']['videoCount']
+        vid_count = _grab_channel_video_count_from_statistics(item)
         if int(vid_count) > min_vid_count:
-            subs = item['statistics']['subscriberCount']
+            subs = _grab_channel_subs_count_from_statistics(item)
             if item not in filtered_channels:
                 if subs_hidden or subs_min < int(subs) < subs_max:
                     filtered_channels.append(item)
@@ -182,7 +179,7 @@ def filter_active_channels(service, data: list, activity: int = 21) -> list:
     activity_time = dt.datetime.now() - dt.timedelta(days=activity)
 
     for item in data:
-        uploads = item['contentDetails']['relatedPlaylists']['uploads']
+        uploads = _grab_channel_playlist_id_from_contentDetails(item)
         response = service.playlistItems().list(
             part='contentDetails',
             playlistId=uploads,
@@ -190,7 +187,7 @@ def filter_active_channels(service, data: list, activity: int = 21) -> list:
         ).execute()
 
         # Grabs recent published video time
-        vid_time = response['items'][0]['contentDetails']['videoPublishedAt'][:10]
+        vid_time = _grab_video_duration_from_contentDetails(response['items'][0])
         vid_time = dt.datetime.strptime(vid_time, '%Y-%m-%d')
 
         if vid_time >= activity_time:
