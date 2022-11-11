@@ -1,5 +1,7 @@
 import re
 import os
+import smtplib
+
 import pandas as pd
 
 
@@ -90,3 +92,17 @@ def extract_playlist_id(url):
         )[0]
 
     return url
+
+
+def send_videos_data_to_trello_board(videos_data: list,
+                                     sender_email: str,
+                                     sender_pass: str,
+                                     receiver_email: str):
+    with smtplib.SMTP(sender_email) as connection:
+        connection.starttls()
+        connection.login(user=sender_email, password=sender_pass)
+        connection.sendmail(
+            from_addr=sender_emailc,
+            to_addrs=receiver_email,
+            msg=f'test'
+        )

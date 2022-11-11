@@ -17,7 +17,8 @@ import google_auth_oauthlib.flow
 
 
 # Project files import
-from my_functions import channel, video, playlist, search, funcs
+from .common import channel, video, playlist, search, funcs
+from .common.channel import get_channel_uploads_id
 
 dotenv.load_dotenv()  # Loads .env file
 

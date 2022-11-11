@@ -6,6 +6,8 @@ import datetime as dt
 
 from bs4 import BeautifulSoup
 
+from .grab import _grab_playlist_id_from_contentDetails
+
 
 def get_channel_uploads_id(service, channel_id: str) -> str:
     """
@@ -26,7 +28,8 @@ def get_channel_uploads_id(service, channel_id: str) -> str:
     response = request.execute()  # Send request and receive response
 
     # Extract playlist_id from the received response
-    playlist_id = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+    playlist_id = _grab_playlist_id_from_contentDetails(response['items'][0])
+    # playlist_id = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
 
     return playlist_id
 
