@@ -1,6 +1,9 @@
 
 
 """Channel related functionality"""
+"""
+    The following section contains functions that are related to YouTube Service response 'channels'
+"""
 
 
 def _grab_channel_playlist_id_from_contentDetails(item) -> str:
@@ -104,7 +107,9 @@ def _channel_subs_hidden(item) -> bool:
 
 
 """Video related functionality"""
-
+"""
+    The following section contains functions that are related to YouTube Service response 'videos'
+"""
 
 def _grab_video_id(item):
     """
@@ -170,19 +175,22 @@ def _grab_video_comment_count_from_statistics(item) -> str:
         comments = '0'
 
 
+"""Playlist related functionality"""
+"""
+    The following section contains functions that are related to YouTube Service response 'playlistItems'
+"""
 
 
-
-
-
-
-
-
+def _grab_video_id_from_snippet(item) -> str:
+    """
+    Grab video id from response 'playlistItems.snippet'
+    """
+    return item['snippet']['resourceId']['videoId']
 
 
 def _grab_video_date_from_contentDetails(item) -> str:
     """
-    Grabs video duration from the playlistItems response 'contentDetails'
+    Grabs video duration from the response 'playlistItems.contentDetails'
     """
     return item['contentDetails']['videoPublishedAt'][:10]
 
@@ -192,7 +200,16 @@ def _grab_video_date_from_contentDetails(item) -> str:
 
 
 
+def _grab_next_page_token(response) -> str:
+    """
+    Grab next token from the YouTube Service response
+    """
+    try:
+        next_page_token = response['nextPageToken']  # Grabs next page token
+    except KeyError:
+        next_page_token = ''
 
+    return next_page_token
 
 
 
