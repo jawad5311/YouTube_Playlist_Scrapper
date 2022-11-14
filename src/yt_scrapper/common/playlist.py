@@ -1,5 +1,13 @@
 
 
+from .grab import _grab_next_page_token
+from .grab import _grab_video_id_from_snippet
+from .grab import _grab_video_date_from_contentDetails
+from .grab import _grab_next_page_token
+from .grab import _grab_next_page_token
+from .grab import _grab_next_page_token
+
+
 def get_videos_id(
         service,
         playlist_id: str) -> list or tuple:
@@ -30,11 +38,11 @@ def get_videos_id(
         items = response['items']  # Grabs only videos info from the response
 
         for item in items:
-            video_id = item['snippet']['resourceId']['videoId']
+            video_id = _grab_video_id_from_snippet(item)
             video_ids.append(video_id)
 
         try:
-            next_page_token = response['nextPageToken']  # Grabs next page token
+            next_page_token = _grab_next_page_token(response)  # Grabs next page token
         except KeyError:
             next_page_token = ''
 
@@ -51,10 +59,10 @@ def get_videos_id(
             items = response['items']  # Grabs only videos info from the response
 
             for item in items:
-                video_id = item['snippet']['resourceId']['videoId']
+                video_id = _grab_video_id_from_snippet(item)
                 video_ids.append(video_id)
 
-            next_page_token = response.get('nextPageToken')
+            next_page_token = _grab_next_page_token(response)
 
         print(f'Total Videos found: {len(video_ids)}')
 
@@ -69,27 +77,3 @@ def get_videos_id(
 
     return video_ids
 
-    # videos_info = []  # Holds info about all available videos
-    #
-    # # Loop through all videos id's and retrieve info
-    # for batch_num in range(0, len(videos_id), 50):
-    #     # Create batches of videos to request data
-    #     videos_batch = videos_id[batch_num: batch_num + 50]  # Batch Size: 50
-    #
-    #     # Send request to retrieve video's details
-    #     response_videos = service.videos().list(
-    #         # video details to be retrieved for each video
-    #         part='contentDetails,snippet,statistics',
-    #         id=videos_batch,
-    #         maxResults=50
-    #     ).execute()
-    #     # batch items received from videos response
-    #     batch_items = response_videos['items']
-    #     # Adding batch items to videos_info list
-    #     videos_info.extend(batch_items)
-    #
-    # if for_sort_by:
-    #     videos_id_in_playlist = [item['id'] for item in playlist_items]
-    #     return videos_id_in_playlist, videos_info
-    #
-    # return videos_info
