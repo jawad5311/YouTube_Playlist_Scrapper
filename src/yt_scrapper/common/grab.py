@@ -195,14 +195,46 @@ def _grab_video_date_from_contentDetails(item) -> str:
     return item['contentDetails']['videoPublishedAt'][:10]
 
 
+"""Search related functionality"""
+"""
+    The following section contains functions that are related to YouTube Service response 'search'.
+"""
 
 
+def _grab_search_result_kind(item) -> str:
+    """
+    Grabs the kind of search result
+    """
+    return item['id']['kind']
 
+
+def _grab_videoId_from_search(item) -> str:
+    """
+    Grabs the video Id from the response 'search'
+    """
+    return item['id']['videoId']
+
+
+def _grab_channelId_from_search(item) -> str:
+    """
+    Grabs the channel Id from the response 'search'
+    """
+    return item['id']['channelId']
+
+
+def _grab_playlistId_from_search(item) -> str:
+    """
+    Grabs the playlist Id from the response 'search'
+    """
+    return item['id']['playlistId']
+
+
+"""Common Functions for YouTube Api Service"""
 
 
 def _grab_next_page_token(response) -> str:
     """
-    Grab next token from the YouTube Service response
+    Grab next page token from the YouTube Service response
     """
     try:
         next_page_token = response['nextPageToken']  # Grabs next page token
