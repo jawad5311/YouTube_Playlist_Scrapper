@@ -1,5 +1,12 @@
 
 
+from .grab import _grab_next_page_token
+from .grab import _grab_search_result_kind
+from .grab import _grab_videoId_from_search
+from .grab import _grab_channelId_from_search
+from .grab import _grab_playlistId_from_search
+
+
 def search_by_keyword(service,
                       query: str,
                       search_type: str = 'video,channel,playlist'):
@@ -31,13 +38,13 @@ def search_by_keyword(service,
 
     items = response['items']
     for item in items:
-        kind = item['id']['kind']
+        kind = _grab_search_result_kind(item)
         if kind == 'youtube#channel':
-            item_id = item['id']['channelId']
+            item_id = _grab_channelId_from_search(item)
         elif kind == 'youtube#video':
-            item_id = item['id']['videoId']
+            item_id = _grab_videoId_from_search(item)
         elif kind == 'youtube#playlist':
-            item_id = item['id']['playlistId']
+            item_id = _grab_playlistId_from_search(item)
         else:
             # Raise KeyError if no item kind found
             raise KeyError(kind)
@@ -46,7 +53,7 @@ def search_by_keyword(service,
             ids.append(item_id)  # Appends IDs' to the list
 
     try:
-        next_page_token = response['nextPageToken']
+        next_page_token = _grab_next_page_token(response)
     except KeyError:
         next_page_token = False
 
@@ -61,13 +68,13 @@ def search_by_keyword(service,
 
         items = response['items']
         for item in items:
-            kind = item['id']['kind']
+            kind = _grab_search_result_kind(item)
             if kind == 'youtube#channel':
-                item_id = item['id']['channelId']
+                item_id = _grab_channelId_from_search(item)
             elif kind == 'youtube#video':
-                item_id = item['id']['videoId']
+                item_id = _grab_videoId_from_search(item)
             elif kind == 'youtube#playlist':
-                item_id = item['id']['playlistId']
+                item_id = _grab_playlistId_from_search(item)
             else:
                 # Raise KeyError if no item kind found
                 raise KeyError(kind)
@@ -76,7 +83,7 @@ def search_by_keyword(service,
                 ids.append(item_id)  # Appends IDs' to the list
 
         try:
-            next_page_token = response['nextPageToken']
+            next_page_token = _grab_next_page_token(response)
         except KeyError:
             next_page_token = False
 
