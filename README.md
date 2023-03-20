@@ -25,28 +25,7 @@ To run this project, you will need to add the following environment variables to
 
 - Create instance of YouTube class
 
-- To extract channel videos:
-
-  - Retrieve playlist id using `upload_response()`
-
-  - Retrieve Videos details using `get_playlist_items()`
-  - Extract video details using `get_videos_data()`
-
-  - Create csv file using `create_csv()`
-
-- To extract channels using search query
-  - Retrieve channels id's using `get_channel_ids()`
-
-  - Filter channels based on videos and subs using `filter_channels()`
-
-
-  - Filter active channels using `filter_active_channels()`
-
-
-  - Extract each channel data using `extract_channel_data()`
-
-
-  - Create a .csv file using `create_csv()`
+- Then call the related function with appropriate parameter
 
 
 ## Code Reference
@@ -57,99 +36,49 @@ To run this project, you will need to add the following environment variables to
 | :-------- | :------- | :------------------------- |
 | `API_KEY` | string | **Required**. Your API key |
 
-### upload_response()
 
-| Parameter    | Type | Description               |
-| :----------- | :--- | :------------------------ |
-| `channel_id` | str  | YouTube Channel ID        |
-
-| Return      | Type | Description               |
-| :---------- | :--- | :------------------------ |
-| playlist ID | str  | Playlist ID of all videos |
-
-### get_playlist_items()
+### extract_channel_videos()
 
 | Parameter     | Type | Description               |
 | :------------ | :--- | :------------------------ |
-| `playlist ID` | str  | Playlist ID of videos     |
+| `channel_id` | str  | Channel ID     |
 
 | Return      | Type | Description                    |
 | :---------- | :--- | :----------------------------- |
-| Videos Info | list | List of all videos information |
+| CSV file   | file | .csv file with all videos of the channel |
 
-### get_videos_data()
+
+### extract_videos_from_playlist()
 
 | Parameter     | Type | Description               |
 | :------------ | :--- | :------------------------ |
-| `data` | list  | Data retrieved from `get_playlist_items()` |
+| `youtube_playlist` | str  | link of the youtube playlist |
 
 | Return      | Type | Description                    |
 | :---------- | :--- | :----------------------------- |
-| DataFrame | pd.DataFrame | Returns pandas dataframe |
+| CSV file | file | .csv file with all the videos in the playlist |
 
-### get_channel_ids()
+
+### extract_channels_by_keyword()
 
 | Parameter     | Type | Description               |
 | :------------ | :--- | :------------------------ |
-| query     |    str  | Search query to be request |
-| no_of_channels | int  | Default: 300, No of channels to scrape|
+| search_query  | str  | Search query to be request |
 
 | Return      | Type | Description                    |
 | :---------- | :--- | :----------------------------- |
-|  | list | List containing channel ids |
+| | CSV file | file | .csv file with all the channels |
 
-### filter_channels()
+
+### extract_videos_by_keyword()
 
 | Parameter     | Type | Description               |
 | :------------ | :--- | :------------------------ |
-| `channels_ids`| list | List containing channels id's |
-| `sub_min` | int  | Minimum no. channel subscribers   |
-| `sub_ma` | int  | Maximum no. channel subscribers   |
-| `min_vid_count` | int  | Minimum no. videos on channel   |
-
+| `search_query`| str | Search query to be requested |
 
 | Return      | Type | Description                    |
 | :---------- | :--- | :----------------------------- |
-|  | list | List containing filtered channels |
-
-### filter_active_channels()
-
-| Parameter     | Type | Description               |
-| :------------ | :--- | :------------------------ |
-| `data`     |    list  | list containing channels info |
-| `activity` | int  | Recent activity made by channel in days|
-
-| Return      | Type | Description                    |
-| :---------- | :--- | :----------------------------- |
-|  | list | List containing active channels |
-
-### extract_channel_data()
-
-| Parameter     | Type | Description               |
-| :------------ | :--- | :------------------------ |
-| `data` | list  | List containing channels data|
-
-| Return      | Type | Description                    |
-| :---------- | :--- | :----------------------------- |
-|  | DataFrame | Pandas DataFrame |
-
-### convert_duration_to_seconds()
-
-| Parameter  | Type | Description                                        |
-| :--------- | :--- | :------------------------------------------------- |
-| `duration` | str  | duration in format '\*00**_H_**00**_M_**00**\*S**' |
-
-| Return  | Type | Description               |
-| :------ | :--- | :------------------------ |
-| seconds | int  | Video duration in seconds |
-
-### create_csv()
-
-| Parameter   | Type | Description                               |
-| :---------- | :--- | :---------------------------------------- |
-| `data`      | DataFrame | Pandas DataFrame |
-| `file_name` | str  | Name by which file is to be saved|
-
+| | CSV file | file | .csv file with all the videos |
 
 
 
